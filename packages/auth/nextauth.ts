@@ -33,7 +33,8 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   pages: {
-    signIn: "/login",
+    signIn: "/en/login",
+    error: "/en/auth/error",
   },
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error

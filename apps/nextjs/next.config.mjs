@@ -2,7 +2,7 @@
 import "./src/env.mjs";
 import "@saasfly/auth/env.mjs";
 
-import { withNextDevtools } from "@next-devtools/core/plugin";
+// import { withNextDevtools } from "@next-devtools/core/plugin";
 // import "@saasfly/api/env"
 import withMDX from "@next/mdx";
 
@@ -34,4 +34,6 @@ const config = {
   output: "standalone",
 };
 
-export default withNextDevtools(withMDX()(config));
+// Temporarily disable Next Devtools to avoid port conflicts
+// export default withNextDevtools(withMDX()(config));
+export default withMDX()(config);

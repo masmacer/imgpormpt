@@ -13,12 +13,18 @@ export const env = createEnv({
   server: {
     NEXTAUTH_SECRET: z.string().min(1),
     RESEND_API_KEY: z.string().optional(),
+    COZE_ACCESS_TOKEN: z.string().optional(),
+    COZE_WORKFLOW_ID: z.string().optional(),
+    COZE_API_BASE_URL: z.string().optional(),
   },
   // Client side variables gets destructured here due to Next.js static analysis
   // Shared ones are also included here for good measure since the behavior has been inconsistent
   runtimeEnv: {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    COZE_ACCESS_TOKEN: process.env.COZE_ACCESS_TOKEN,
+    COZE_WORKFLOW_ID: process.env.COZE_WORKFLOW_ID,
+    COZE_API_BASE_URL: process.env.COZE_API_BASE_URL,
     NEXT_PUBLIC_STRIPE_PRO_PRODUCT_ID:
       process.env.NEXT_PUBLIC_STRIPE_PRO_PRODUCT_ID,
     NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID:

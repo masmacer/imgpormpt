@@ -1,14 +1,8 @@
-import { auth } from '@clerk/nextjs/server'
+// This file is deprecated - functionality moved to nextauth.ts
+// Kept for backward compatibility during migration
 
-import { env } from "./env.mjs";
+import { getCurrentUser } from "./nextauth";
 
 export async function getSessionUser() {
-  const { sessionClaims } = await auth();
-  if (env.ADMIN_EMAIL) {
-    const adminEmails = env.ADMIN_EMAIL.split(",");
-    if (sessionClaims?.user?.email) {
-      sessionClaims.user.isAdmin = adminEmails.includes(sessionClaims?.user?.email);
-    }
-  }
-  return sessionClaims?.user;
+  return await getCurrentUser();
 }

@@ -1,5 +1,22 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
+console.log('Loaded env:', {
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+  STRIPE_API_KEY: process.env.STRIPE_API_KEY,
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  RESEND_FROM: process.env.RESEND_FROM,
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  IS_DEBUG: process.env.IS_DEBUG,
+  POSTGRES_URL: process.env.POSTGRES_URL,
+  DATABASE_URL: process.env.DATABASE_URL,
+  POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL,
+  POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING,
+});
 
 export const env = createEnv({
   server: {
@@ -15,6 +32,11 @@ export const env = createEnv({
     RESEND_FROM: z.string().min(1),
     ADMIN_EMAIL: z.string().optional(),
     IS_DEBUG: z.string().optional(),
+    // Database connection strings
+    POSTGRES_URL: z.string().min(1),
+    DATABASE_URL: z.string().min(1),
+    POSTGRES_PRISMA_URL: z.string().min(1).optional(),
+    POSTGRES_URL_NON_POOLING: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -31,5 +53,9 @@ export const env = createEnv({
     RESEND_FROM: process.env.RESEND_FROM,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     IS_DEBUG: process.env.IS_DEBUG,
+    POSTGRES_URL: process.env.POSTGRES_URL,
+    DATABASE_URL: process.env.DATABASE_URL,
+    POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL,
+    POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING,
   },
 });

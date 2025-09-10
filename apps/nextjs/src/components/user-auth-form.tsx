@@ -97,7 +97,11 @@ export function UserAuthForm({
               </p>
             )}
           </div>
-          <button className={cn(buttonVariants())} disabled={isLoading}>
+          <button 
+            type="submit"
+            className={cn(buttonVariants())} 
+            disabled={isLoading || isGitHubLoading || disabled}
+          >
             {isLoading && (
               <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />
             )}

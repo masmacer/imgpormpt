@@ -85,7 +85,8 @@ export function NavBar({
           </div>
           <LocaleChange url={"/"} />
           {!user ? (
-            <Link href={`/${lang}/login-clerk`}>
+            // Clerk 相关路由已禁用，切换为 NextAuth-only
+            <Link href={`/${lang}/login`}>
               <Button variant="outline" size="sm">
                 {typeof marketing.login === "string"
                   ? marketing.login
@@ -101,16 +102,17 @@ export function NavBar({
               dict={dropdown}
             />
           ) : (
-            <Button
-              className="px-3"
-              variant="default"
-              size="sm"
-              onClick={signInModal.onOpen}
-            >
-              {typeof marketing.signup === "string"
-                ? marketing.signup
-                : "Default Signup Text"}
-            </Button>
+            <Link href={`/${lang}/register`}>
+              <Button
+                className="px-3"
+                variant="default"
+                size="sm"
+              >
+                {typeof marketing.signup === "string"
+                  ? marketing.signup
+                  : "Default Signup Text"}
+              </Button>
+            </Link>
           )}
         </div>
       </div>
