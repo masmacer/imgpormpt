@@ -3,8 +3,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"],
-      "contentlayer/generated": ["./.contentlayer/generated"]
+      "~/*": [
+        "./src/*"
+      ],
+      "contentlayer/generated": [
+        "./.contentlayer/generated"
+      ]
     },
     "plugins": [
       {
@@ -15,12 +19,14 @@
   },
   "include": [
     "next-env.d.ts",
-    ".next/types/**/*.ts",
     "*.ts",
     "*.tsx",
     "*.mjs",
     "src",
-    "contentlayer.config.ts"
+    "contentlayer.config.ts",
+    ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
