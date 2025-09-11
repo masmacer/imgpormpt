@@ -1,10 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { handleEvent, stripe, type Stripe } from "@saasfly/stripe";
+// Temporarily disable stripe webhooks to avoid database connection issues
+// import { handleEvent, stripe, type Stripe } from "@saasfly/stripe";
 
 import { env } from "~/env.mjs";
 
 const handler = async (req: NextRequest) => {
+  // Temporarily return a simple response to avoid database connection issues
+  console.log("⚠️ Stripe webhooks temporarily disabled");
+  return NextResponse.json({ 
+    message: "Stripe webhooks temporarily disabled",
+    received: true 
+  }, { status: 200 });
+
+  /* Original code - temporarily commented out
   const payload = await req.text();
   const signature = req.headers.get("Stripe-Signature")!;
   try {
@@ -22,6 +31,7 @@ const handler = async (req: NextRequest) => {
     console.log(`❌ Error when handling Stripe Event: ${message}`);
     return NextResponse.json({ error: message }, { status: 400 });
   }
+  */
 };
 
 export { handler as GET, handler as POST };

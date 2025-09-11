@@ -72,7 +72,7 @@ export default function IndexPage({
   const [generatedPrompt, setGeneratedPrompt] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { generatePrompt, isLoading, error } = useImageToPrompt({
+  const { generatePrompt, generatePromptFromUrl, isLoading, error } = useImageToPrompt({
     onSuccess: (prompt) => {
       setGeneratedPrompt(prompt);
     }
@@ -114,33 +114,24 @@ export default function IndexPage({
   };
 
   const handleGeneratePrompt = async () => {
-    let file: File | null = null;
-
-    // 如果有上传的文件，使用文件
+    // 如果有上传的文件，使用文件上传模式
     if (fileInputRef.current?.files?.[0]) {
-      file = fileInputRef.current.files[0];
+      const file = fileInputRef.current.files[0];
+      await generatePrompt(file, {
+        model: selectedModel,
+        language: "en"
+      });
     } 
-    // 如果有URL，尝试获取文件
+    // 如果有URL，使用URL模式
     else if (imageUrl) {
-      try {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        file = new File([blob], 'image.jpg', { type: blob.type });
-      } catch (error) {
-        console.error('Failed to fetch image from URL:', error);
-        return;
-      }
-    }
-
-    if (!file) {
+      await generatePromptFromUrl(imageUrl, {
+        model: selectedModel,
+        language: "en"
+      });
+    } else {
       alert('Please upload an image or provide an image URL');
       return;
     }
-
-    await generatePrompt(file, {
-      model: selectedModel,
-      language: "en"
-    });
   };
 
   return (
@@ -327,19 +318,6 @@ export default function IndexPage({
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Language Selection */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Prompt Language
-                </h3>
-                <select className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-800 dark:text-white">
-                  <option value="en">English</option>
-                  <option value="zh">中文</option>
-                  <option value="es">Español</option>
-                  <option value="fr">Français</option>
-                </select>
               </div>
             </div>
 
