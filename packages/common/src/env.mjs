@@ -11,7 +11,7 @@ export const env = createEnv({
     NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PRICE_ID: z.string().optional(),
   },
   server: {
-    NEXTAUTH_SECRET: z.string().min(1),
+    NEXTAUTH_SECRET: z.string().min(1).optional(),
     RESEND_API_KEY: z.string().optional(),
     COZE_ACCESS_TOKEN: z.string().optional(),
     COZE_WORKFLOW_ID: z.string().optional(),
