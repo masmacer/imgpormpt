@@ -19,9 +19,9 @@
     "": ""
   },
   "marketing": {
-    "introducing": "介绍 Saasfly",
-    "title": "更轻松地将您的应用推向全球，尽在 ",
-    "sub_title": "简单易上手，具备企业级品质的 Next.js 模板。打造 SaaS 服务的终极一体化解决方案，助力业务增长。",
+    "introducing": "介绍图片提示词生成器",
+    "title": "用更好的AI提示词让您的图片焕发新生 ",
+    "sub_title": "将您的图片转换为引人入胜的AI提示词，创造更好的艺术作品、设计和创意内容。",
     "get_started": "快速开始",
     "view_on_github": "在 GitHub 上查看",
     "explore_product": "探索产品",
@@ -78,14 +78,14 @@
   },
   "login": {
     "back": "返回",
-    "welcome_back": "欢迎回来",
-    "signin_title": "输入您的电子邮件以登录您的账户",
+    "welcome_back": "欢迎使用图片提示词生成器",
+    "signin_title": "输入您的电子邮件以访问您的账户",
     "singup_title": "还没有账户？立即注册。",
     "signin_email": "用电子邮件登录",
     "signin_others": "或者继续使用",
     "signup": "注册",
     "privacy": "只有您的电子邮件和头像会被存储。",
-    "signup_github": "使用 Github 注册",
+    "signup_google": "使用 Google 注册",
     "": ""
   },
   "common": {

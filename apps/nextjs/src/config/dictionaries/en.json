@@ -19,9 +19,9 @@
     "": ""
   },
   "marketing": {
-    "introducing": "Introducing Saasfly",
-    "title": "Ship your apps to the world easier with ",
-    "sub_title": "An easy-to-use and enterprise-grade Next.js boilerplate. Your complete All-in-One solution for building SaaS services.",
+    "introducing": "Introducing Image to Prompt Generator",
+    "title": "Transform your images into better AI prompts with ",
+    "sub_title": "Generate compelling AI prompts from your images to create better artwork, designs, and creative content.",
     "get_started": "Get Started",
     "view_on_github": "View on GitHub",
     "explore_product": "Explore Product",
@@ -78,14 +78,14 @@
   },
   "login": {
     "back": "Back",
-    "welcome_back": "Welcome back",
-    "signin_title": "Enter your email to log into your account",
+    "welcome_back": "Welcome to Image to Prompt Generator",
+    "signin_title": "Enter your email to access your account",
     "singup_title": "Don't have an account? Sign up now.",
     "signin_email": "Log in with Email",
     "signin_others": "Or continue with",
     "signup": "Sign up",
     "privacy": "only your email and profile picture will be stored.",
-    "signup_github": "Sign Up with Github",
+    "signup_google": "Sign Up with Google",
     "": ""
   },
   "common": {
