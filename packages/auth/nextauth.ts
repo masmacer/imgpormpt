@@ -33,8 +33,8 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   pages: {
-    signIn: "/en/login",
-    error: "/en/auth/error",
+    signIn: "/login",
+    error: "/auth/error", 
   },
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
@@ -60,7 +60,7 @@ export const authOptions: NextAuthOptions = {
 
         try {
           await resend.emails.send({
-            from: env.RESEND_FROM,
+            from: env.RESEND_FROM || "noreply@example.com",
             to: identifier,
             subject: authSubject,
             react: MagicLinkEmail({
