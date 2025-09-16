@@ -1,11 +1,11 @@
 export const i18n = {
-  defaultLocale: "zh",
+  defaultLocale: "en",
   locales: ["en", "zh", "ko", "ja"],
 } as const;
 
 export type Locale = (typeof i18n)["locales"][number];
 
-// 新增的映射对象
+// Language mapping object
 export const localeMap = {
   en: "English",
   zh: "中文",

@@ -1,4 +1,4 @@
-// 所有 Clerk 相关工具已禁用，切换为 NextAuth-only
+// All Clerk-related tools are disabled, switched to NextAuth-only
 // import { match as matchLocale } from "@formatjs/intl-localematcher";
 // import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // import { NextRequest, NextResponse } from 'next/server';
@@ -74,7 +74,7 @@
 //     );
 //   }
 // })
-// 所有 Clerk 相关工具已禁用，切换为 NextAuth-only
+// All Clerk-related tools are disabled, switched to NextAuth-only
 // import { match as matchLocale } from "@formatjs/intl-localematcher";
 // import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // import { NextRequest, NextResponse } from 'next/server';

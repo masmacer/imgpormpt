@@ -8,33 +8,33 @@ export const priceFaqDataMap: Record<string, FAQItem[]> = {
   zh: [
     {
       id: "item-1",
-      question: "免费计划的费用是多少？",
+      question: "What is the cost of the free plan?",
       answer:
-        "我们的免费计划完全免费，没有月费或年费。这是一个开始使用和探索我们基本功能的好方法。",
+        "Our free plan is completely free, with no monthly or annual charges. It's a great way to get started and explore our basic features.",
     },
     {
       id: "item-2",
-      question: "专业月度计划的费用是多少？",
+      question: "How much does the Pro Monthly plan cost?",
       answer:
-        "专业月度计划的价格是每月30美元。它提供了访问我们核心功能的权限，并且是按月计费的。",
+        "The Pro Monthly plan is priced at $30 per month. It provides access to our core features and is billed on a monthly basis.",
     },
     {
       id: "item-3",
-      question: "商务月度计划的价格是多少？",
+      question: "What is the price of the Business Monthly plan?",
       answer:
-        "商务月度计划的价格是每月60美元。它提供高级功能，并且也是按月计费，增加了灵活性。",
+        "The Business Monthly plan is available for $60 per month. It offers advanced features and is billed on a monthly basis for added flexibility.",
     },
     {
       id: "item-4",
-      question: "你们提供年度订阅计划吗？",
+      question: "Do you offer any annual subscription plans?",
       answer:
-        "是的，我们提供年度订阅计划，以便更多的节省。专业年度计划的费用是每年288美元，商务年度计划是每年600美元。",
+        "Yes, we offer annual subscription plans for even more savings. The Pro Annual plan is $288 per year, and the Business Annual plan is $600 per year.",
     },
     {
       id: "item-5",
-      question: "付费计划有试用期吗？",
+      question: "Is there a trial period for the paid plans?",
       answer:
-        "我们为专业月度和专业年度计划提供14天的免费试用期。这是一个在承诺付费订阅之前体验所有功能的好方法。",
+        "We offer a 14-day free trial for both the Pro Monthly and Pro Annual plans. It's a great way to experience all the features before committing to a paid subscription.",
     },
   ],
   en: [

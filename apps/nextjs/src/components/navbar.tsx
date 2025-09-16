@@ -10,7 +10,6 @@ import { Button } from "@saasfly/ui/button";
 
 import { MainNav } from "./main-nav";
 import { LocaleChange } from "~/components/locale-change";
-import { GitHubStar } from "~/components/github-star";
 import { useSigninModal } from "~/hooks/use-signin-modal";
 import { UserAccountNav } from "./user-account-nav";
 
@@ -80,9 +79,6 @@ export function NavBar({
 
           {rightElements}
 
-          <div className="hidden md:flex lg:flex xl:flex">
-            <GitHubStar />
-          </div>
           <LocaleChange url={"/"} />
           {!user ? (
             // Clerk 相关路由已禁用，切换为 NextAuth-only

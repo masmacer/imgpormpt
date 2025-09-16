@@ -12,7 +12,7 @@ if (typeof window !== "undefined") {
   const posthogKey = env.NEXT_PUBLIC_POSTHOG_KEY + "";
   const posthogHost = env.NEXT_PUBLIC_POSTHOG_HOST + "";
 
-  // 你也可以先检查这些变量是否存在
+  // You can also check if these variables exist first  
   if (posthogKey && posthogHost) {
     posthog.init(posthogKey, {
       api_host: posthogHost,

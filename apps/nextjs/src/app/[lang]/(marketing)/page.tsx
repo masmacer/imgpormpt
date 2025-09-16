@@ -1,8 +1,7 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useRef } from "react";
+import type { Metadata } from "next";
+import Script from "next/script";
 
 import { Button } from "@saasfly/ui/button";
 import { ColourfulText } from "@saasfly/ui/colorful-text";
@@ -10,52 +9,139 @@ import * as Icons from "@saasfly/ui/icons";
 import { Card } from "@saasfly/ui/card";
 
 import type { Locale } from "~/config/i18n-config";
-import { useImageToPrompt } from "~/hooks/use-image-to-prompt";
+import ImageToPromptClient from "~/components/image-to-prompt-client";
+
+export const metadata: Metadata = {
+  title: "Free Image to Prompt Generator - Transform Images into AI Prompts",
+  description: "Convert any image into detailed AI prompts with our free image to prompt generator. Perfect for Stable Diffusion, Midjourney, DALL-E, and other AI art tools. Upload your image and get instant, accurate prompts that capture style, composition, colors, and mood. Start creating better AI art today with our advanced image analysis technology!",
+  keywords: [
+    "image to prompt generator", "free image to prompt", "AI prompt generator", 
+    "Stable Diffusion prompts", "Midjourney prompts", "DALL-E prompts", 
+    "AI art prompts", "image analysis", "prompt engineering", "AI image generation",
+    "reverse prompt", "image to text", "AI art generator", "prompt from image"
+  ],
+  openGraph: {
+    title: "Free Image to Prompt Generator - Transform Images into AI Prompts",
+    description: "Convert any image into detailed AI prompts with our free image to prompt generator. Perfect for Stable Diffusion, Midjourney, DALL-E, and other AI art tools.",
+    type: "website",
+    url: "https://imagepromptgenerator.org",
+    images: [
+      {
+        url: "/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Image to Prompt Generator Tool",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Free Image to Prompt Generator - Transform Images into AI Prompts",
+    description: "Convert any image into detailed AI prompts with our free image to prompt generator.",
+    images: ["/images/twitter-card.jpg"],
+  },
+  alternates: {
+    canonical: "https://imagepromptgenerator.org",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
 
 // 功能卡片数据
 const features = [
   {
     icon: "🖼️",
-    title: "Image to Prompt",
-    description: "Convert Image to Prompt to generate your own image"
+    title: "Image to Prompt Generator",
+    description: "Convert any image into detailed, professional AI prompts instantly. Our advanced image analysis technology captures style, composition, colors, and artistic elements."
   },
   {
     icon: "✨",
-    title: "Magic Enhance", 
-    description: "Transform simple text into detailed, descriptive image prompt"
+    title: "Magic Prompt Enhancement", 
+    description: "Transform simple descriptions into rich, detailed prompts optimized for AI art generation. Perfect for creating professional-quality results."
   },
   {
     icon: "🔍",
-    title: "AI Describe Image",
-    description: "Let AI help you understand and analyze any image in detail"
+    title: "AI Image Analysis",
+    description: "Get comprehensive image analysis including objects, style, lighting, mood, and technical details for precise prompt generation."
   },
   {
     icon: "🎨",
-    title: "AI Image Generator",
-    description: "Transform your image prompt into stunning visuals with AI-powered generation"
+    title: "Multi-Model Support",
+    description: "Generate prompts optimized for Stable Diffusion, Midjourney, DALL-E, Flux, and other popular AI art generation platforms."
   }
 ];
 
-// AI模型数据
-const aiModels = [
+// AI模型支持
+const supportedModels = [
   {
-    name: "General Image Prompt",
-    description: "Natural language description of the image (normal)",
-    checked: true
-  },
-  {
-    name: "Flux",
-    description: "Optimized for state-of-the-art Flux AI models (flux)"
+    name: "Stable Diffusion",
+    description: "Generate prompts optimized for Stable Diffusion models with proper formatting and weight parameters.",
+    popular: true
   },
   {
     name: "Midjourney",
-    description: "Tailored for Midjourney generation with parameters (midjourney)"
+    description: "Create Midjourney-style prompts with aspect ratios, stylize values, and version parameters.",
+    popular: true
   },
   {
-    name: "Stable Diffusion",
-    description: "Formatted for Stable Diffusion models (stableDiffusion)"
+    name: "DALL-E",
+    description: "Format prompts for OpenAI's DALL-E with natural language descriptions and style specifications.",
+    popular: true
+  },
+  {
+    name: "Flux",
+    description: "Specialized prompts for the latest Flux AI models with enhanced detail and accuracy.",
+    popular: false
   }
 ];
+
+// SEO优化的使用场景
+const useCases = [
+  {
+    title: "AI Art Creation",
+    description: "Generate detailed prompts from reference images to create consistent AI artwork with your desired style and composition."
+  },
+  {
+    title: "Style Transfer",
+    description: "Analyze artistic styles from images and create prompts to replicate similar aesthetics in your AI-generated art."
+  },
+  {
+    title: "Concept Art Development",
+    description: "Transform concept sketches or reference photos into detailed prompts for professional concept art creation."
+  },
+  {
+    title: "Digital Marketing",
+    description: "Create branded visual content by analyzing your brand images and generating consistent style prompts."
+  }
+];
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Image to Prompt Generator",
+  "description": "Free online tool to convert images into detailed AI prompts for Stable Diffusion, Midjourney, DALL-E, and other AI art generators.",
+  "url": "https://imagepromptgenerator.org",
+  "applicationCategory": "DesignApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "creator": {
+    "@type": "Organization",
+    "name": "ImagePrompt"
+  }
+};
 
 export default function IndexPage({
   params: { lang },
@@ -64,408 +150,268 @@ export default function IndexPage({
     lang: string;
   };
 }) {
-  const [activeTab, setActiveTab] = useState("image-to-prompt");
-  const [selectedModel, setSelectedModel] = useState("General Image Prompt");
-  const [dragActive, setDragActive] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState("");
-  const [generatedPrompt, setGeneratedPrompt] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const { generatePrompt, generatePromptFromUrl, isLoading, error } = useImageToPrompt({
-    onSuccess: (prompt) => {
-      setGeneratedPrompt(prompt);
-    }
-  });
-
-  const handleFileUpload = (file: File) => {
-    // 显示图片预览
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setUploadedImage(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      handleFileUpload(file);
-    }
-  };
-
-  const handleDrop = (event: React.DragEvent) => {
-    event.preventDefault();
-    setDragActive(false);
-    
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      handleFileUpload(file);
-    }
-  };
-
-  const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
-    setDragActive(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragActive(false);
-  };
-
-  const handleGeneratePrompt = async () => {
-    // 如果有上传的文件，使用文件上传模式
-    if (fileInputRef.current?.files?.[0]) {
-      const file = fileInputRef.current.files[0];
-      await generatePrompt(file, {
-        model: selectedModel,
-        language: "en"
-      });
-    } 
-    // 如果有URL，使用URL模式
-    else if (imageUrl) {
-      await generatePromptFromUrl(imageUrl, {
-        model: selectedModel,
-        language: "en"
-      });
-    } else {
-      alert('Please upload an image or provide an image URL');
-      return;
-    }
-  };
 
   return (
     <>
-      {/* Hero Section */}
+      {/* JSON-LD Structured Data */}
+      <Script
+        id="json-ld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
+      />
+
+      {/* Hero Section - SEO Optimized */}
       <section className="container mx-auto px-4 py-20">
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
-          {/* 主标题 */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6">
-            Create Better AI Art
+            Free Image to Prompt
             <br />
-            with <ColourfulText text="Image Prompt" />
+            <ColourfulText text="Generator" /> Tool
           </h1>
           
-          {/* 副标题 */}
-          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl">
-            Inspire ideas, Enhance image prompt, Create masterpieces
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl">
+            Transform any image into detailed AI prompts instantly. Our advanced image to prompt generator analyzes your images and creates professional prompts for Stable Diffusion, Midjourney, DALL-E, and other AI art tools. Start creating better AI art with precise, descriptive prompts that capture every detail.
           </p>
           
-          {/* 行动按钮 */}
           <div className="flex flex-col sm:flex-row gap-4 mb-16">
             <Button 
               className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg font-semibold rounded-lg"
               size="lg"
             >
-              Try it now !
+              Try Free Image to Prompt Generator
             </Button>
             <Button 
               variant="outline" 
               className="border-purple-200 text-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900/20 px-8 py-3 text-lg font-semibold rounded-lg"
               size="lg"
             >
-              Tutorials
+              Learn How It Works
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Main Feature Section - Image to Prompt Generator */}
+      {/* Tool Introduction Section */}
       <section className="container mx-auto px-4 py-16 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Free Image to Prompt Generator
+              Free Image to Prompt Generator Tool
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
-              Convert Image to Prompt to generate your own image
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              Upload any image and get instant, detailed prompts optimized for AI art generation. Our advanced computer vision technology analyzes your images to create professional-quality prompts.
             </p>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex justify-center mb-8">
-            <div className="flex space-x-1 bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm">
-              <button
-                onClick={() => setActiveTab("image-to-prompt")}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-md transition-colors ${
-                  activeTab === "image-to-prompt"
-                    ? "bg-purple-600 text-white"
-                    : "text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                }`}
-              >
-                <Icons.Page className="w-4 h-4" />
-                <span>Image to Prompt</span>
-              </button>
-              <button
-                onClick={() => setActiveTab("text-to-prompt")}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-md transition-colors ${
-                  activeTab === "text-to-prompt"
-                    ? "bg-purple-600 text-white"
-                    : "text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                }`}
-              >
-                <Icons.Post className="w-4 h-4" />
-                <span>Text to Prompt</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Side - Upload/Input */}
-            <div className="space-y-6">
-              {activeTab === "image-to-prompt" ? (
-                <div>
-                  <div className="flex space-x-4 mb-4">
-                    <Button 
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      Upload Image
-                    </Button>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        placeholder="Input Image URL"
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-                      />
-                    </div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileSelect}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                  </div>
-                  
-                  {/* Upload Area */}
-                  <div
-                    className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-                      dragActive
-                        ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-                        : "border-gray-300 dark:border-gray-600"
-                    }`}
-                    onDragEnter={handleDragOver}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                  >
-                    {uploadedImage ? (
-                      <div className="space-y-4">
-                        <img 
-                          src={uploadedImage} 
-                          alt="Uploaded" 
-                          className="max-w-full max-h-64 mx-auto rounded-lg"
-                        />
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Image uploaded successfully
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="text-6xl text-gray-400 mb-4">🖼️</div>
-                        <p className="text-gray-600 dark:text-gray-400 mb-2">
-                          Upload a photo or drag and drop
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500">
-                          PNG, JPG, or WEBP up to 512MB
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <textarea
-                    placeholder="Describe what you want to generate..."
-                    className="w-full h-64 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-800 dark:text-white resize-none"
-                  />
-                </div>
-              )}
-
-              {/* AI Model Selection */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Select AI Model
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {aiModels.map((model, index) => (
-                    <div
-                      key={index}
-                      onClick={() => setSelectedModel(model.name)}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        selectedModel === model.name
-                          ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          {model.name}
-                        </h4>
-                        {selectedModel === model.name && (
-                          <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
-                            <Icons.Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {model.description}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+          {/* Step by Step Process */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">📤</span>
               </div>
-            </div>
-
-            {/* Right Side - Preview */}
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Image Preview
-                </h3>
-                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center bg-gray-50 dark:bg-gray-800">
-                  {uploadedImage || imageUrl ? (
-                    <img 
-                      src={uploadedImage || imageUrl} 
-                      alt="Preview" 
-                      className="max-w-full max-h-64 mx-auto rounded-lg"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <>
-                      <div className="text-6xl text-gray-400 mb-4">🖼️</div>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Your image will show here
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Generate Button */}
-              <Button 
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 text-lg font-semibold"
-                onClick={handleGeneratePrompt}
-                disabled={isLoading || (!uploadedImage && !imageUrl)}
-              >
-                {isLoading ? (
-                  <>
-                    <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  "Generate Prompt"
-                )}
-              </Button>
-
-              {/* Result Area */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Generated Prompt
-                </h3>
-                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 min-h-32">
-                  {error ? (
-                    <p className="text-red-500 dark:text-red-400">
-                      Error: {error}
-                    </p>
-                  ) : generatedPrompt ? (
-                    <div className="space-y-3">
-                      <p className="text-gray-900 dark:text-white">
-                        {generatedPrompt}
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigator.clipboard.writeText(generatedPrompt)}
-                        className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                      >
-                        <Icons.Copy className="mr-2 h-4 w-4" />
-                        Copy to Clipboard
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400 italic">
-                      Your generated prompt will appear here...
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-          {features.map((feature, index) => (
-            <div 
-              key={index}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
-            >
-              <div className="text-4xl mb-4">{feature.icon}</div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                {feature.title}
+                1. Upload Your Image
               </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                {feature.description}
+              <p className="text-gray-600 dark:text-gray-300">
+                Upload any image file (PNG, JPG, WEBP) or provide an image URL. Our tool supports high-resolution images up to 512MB.
               </p>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Interest Links Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="flex flex-col items-center text-center">
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            You may be interested in:
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link 
-              href="#" 
-              className="text-purple-600 hover:text-purple-700 underline"
-            >
-              What is an Image Prompt?
-            </Link>
-            <Link 
-              href="#" 
-              className="text-purple-600 hover:text-purple-700 underline"
-            >
-              How to Write Effective Image Prompt?
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 保留原有的sponsor section */}
-      <section className="container pt-24">
-        <div className="flex flex-col justify-center items-center pt-10">
-          <div className="text-lg text-neutral-500 dark:text-neutral-400">Our Sponsors</div>
-          <div className="mt-4 flex items-center gap-4">
-            <Link href="https://go.clerk.com/uKDp7Au" target="_blank">
-              <Image src="/images/clerk.png" width="48" height="48" alt="clerk"/>
-            </Link>
-            <Link href="https://www.twillot.com/" target="_blank">
-              <Image src="https://www.twillot.com/logo-128.png" width="48" height="48" alt="twillot"/>
-            </Link>
-            <Link href="https://www.setupyourpay.com/" target="_blank">
-              <Image src="https://www.setupyourpay.com/logo.png" width="48" height="48" alt="setupyourpay" />
-            </Link>
-            <Link href="https://opencollective.com/saasfly" target="_blank">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-dashed border-neutral-300 dark:border-neutral-700 hover:bg-accent dark:hover:bg-neutral-800/30">
-                <Icons.Heart className="w-5 h-5 fill-pink-600 text-pink-600 dark:fill-pink-700 dark:text-pink-700" />
-                <span className="text-sm font-medium text-neutral-500 dark:text-neutral-200">Donate</span>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">🤖</span>
               </div>
-            </Link>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                2. AI Analysis
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Our advanced AI analyzes colors, composition, style, objects, lighting, and artistic elements to understand your image completely.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">✨</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                3. Get Perfect Prompts
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Receive detailed, optimized prompts formatted for your chosen AI model. Copy and use them in your favorite AI art generator.
+              </p>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Tool Section */}
+      <ImageToPromptClient />
+
+      {/* Features Section - SEO Enhanced */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Why Choose Our Image to Prompt Generator?
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              Our free image to prompt generator offers the most advanced features for creating high-quality AI art prompts. Perfect for artists, designers, and AI enthusiasts.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-4">{feature.icon}</div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                  {feature.description}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Supported Models Section */}
+      <section className="container mx-auto px-4 py-16 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Compatible with All Major AI Art Platforms
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300">
+              Generate optimized prompts for your favorite AI art generation tools
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {supportedModels.map((model, index) => (
+              <div
+                key={index}
+                className={`p-6 rounded-lg border-2 transition-all ${
+                  model.popular
+                    ? "border-purple-200 bg-purple-50 dark:border-purple-400/30 dark:bg-purple-900/10"
+                    : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    {model.name}
+                  </h3>
+                  {model.popular && (
+                    <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      Popular
+                    </span>
+                  )}
+                </div>
+                <p className="text-gray-600 dark:text-gray-300">
+                  {model.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Perfect for Every Creative Project
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300">
+              Discover how our image to prompt generator can enhance your creative workflow
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {useCases.map((useCase, index) => (
+              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                  {useCase.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  {useCase.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section for SEO */}
+      <section className="container mx-auto px-4 py-16 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300">
+              Everything you need to know about our image to prompt generator
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                What is an image to prompt generator?
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                An image to prompt generator is an AI-powered tool that analyzes images and creates detailed text descriptions (prompts) that can be used to generate similar images with AI art tools like Stable Diffusion, Midjourney, or DALL-E.
+              </p>
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                Is this image to prompt generator free to use?
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Yes! Our image to prompt generator is completely free to use. You can upload images, generate prompts, and copy them for use in any AI art platform without any cost or registration required.
+              </p>
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                Which AI art platforms work with generated prompts?
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Our generated prompts work with all major AI art platforms including Stable Diffusion, Midjourney, DALL-E, Flux, Leonardo AI, and many others. We optimize prompts for each platform's specific requirements.
+              </p>
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                What image formats are supported?
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                We support all common image formats including PNG, JPG, JPEG, WEBP, and GIF. You can upload images up to 512MB in size, and we also support image URLs from web sources.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+            Ready to Transform Your Images into Perfect AI Prompts?
+          </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
+            Join thousands of artists and creators who use our free image to prompt generator to create stunning AI art. Start generating professional-quality prompts in seconds.
+          </p>
+          <Button 
+            className="bg-purple-600 hover:bg-purple-700 text-white px-12 py-4 text-xl font-semibold rounded-lg"
+            size="lg"
+          >
+            Get Started with Image to Prompt Generator
+          </Button>
         </div>
       </section>
     </>

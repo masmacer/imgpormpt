@@ -11,27 +11,6 @@ export const getMarketingConfig = async ({
 }): Promise<MarketingConfig> => {
   const dict = await getDictionary(lang);
   return {
-    mainNav: [
-      {
-        title: "Libra AI",
-        href: "https://libra.dev/",
-      },
-      {
-        title: dict.marketing.main_nav_features,
-        href: `/#features`,
-      },
-      {
-        title: dict.marketing.main_nav_pricing,
-        href: `/pricing`,
-      },
-      {
-        title: dict.marketing.main_nav_blog,
-        href: `/blog`,
-      },
-      {
-        title: dict.marketing.main_nav_documentation,
-        href: `/docs`,
-      },
-    ],
+    mainNav: [],
   };
 };

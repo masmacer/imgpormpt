@@ -10,7 +10,7 @@ export default function UrlTestPage() {
 
   const testUrl = async () => {
     if (!imageUrl.trim()) {
-      setError('请输入图片URL');
+      setError('Please enter image URL');
       return;
     }
 
@@ -27,7 +27,7 @@ export default function UrlTestPage() {
         body: JSON.stringify({
           imageUrl: imageUrl.trim(),
           model: 'General Image Prompt',
-          language: 'zh'
+          language: 'en'
         }),
       });
 
@@ -36,10 +36,10 @@ export default function UrlTestPage() {
       if (data.success) {
         setResult(data.data);
       } else {
-        setError(data.error || '请求失败');
+        setError(data.error || 'Request failed');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '网络错误');
+      setError(err instanceof Error ? err.message : 'Network error');
     } finally {
       setLoading(false);
     }
@@ -47,18 +47,18 @@ export default function UrlTestPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">URL 图片测试</h1>
+      <h1 className="text-2xl font-bold mb-6">URL Image Test</h1>
       
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-2">
-            图片 URL
+            Image URL
           </label>
           <input
             type="url"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="输入图片URL，例如：https://example.com/image.jpg"
+            placeholder="Enter image URL, e.g.: https://example.com/image.jpg"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -68,46 +68,46 @@ export default function UrlTestPage() {
           disabled={loading}
           className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-md"
         >
-          {loading ? '处理中...' : '测试 URL'}
+          {loading ? 'Processing...' : 'Test URL'}
         </button>
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            错误: {error}
+            Error: {error}
           </div>
         )}
 
         {result && (
           <div className="space-y-4">
             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-              <h3 className="font-semibold">处理成功！</h3>
-              <p>输入类型: {result.inputType}</p>
-              <p>模型: {result.model}</p>
-              <p>语言: {result.language}</p>
-              {result.imageUrl && <p>图片URL: {result.imageUrl}</p>}
+              <h3 className="font-semibold">Success!</h3>
+              <p>Input Type: {result.inputType}</p>
+              <p>Model: {result.model}</p>
+              <p>Language: {result.language}</p>
+              {result.imageUrl && <p>Image URL: {result.imageUrl}</p>}
             </div>
 
             <div className="bg-gray-100 p-4 rounded">
-              <h4 className="font-semibold mb-2">生成的提示词:</h4>
+              <h4 className="font-semibold mb-2">Generated Prompt:</h4>
               <p className="whitespace-pre-wrap">{result.prompt}</p>
             </div>
           </div>
         )}
 
         <div className="mt-8 p-4 bg-blue-50 rounded">
-          <h3 className="font-semibold mb-2">测试用的图片URL示例:</h3>
+          <h3 className="font-semibold mb-2">Sample Image URLs for Testing:</h3>
           <div className="space-y-2 text-sm">
             <button
               onClick={() => setImageUrl('https://picsum.photos/800/600')}
               className="block text-blue-600 hover:underline"
             >
-              https://picsum.photos/800/600 (随机图片)
+              https://picsum.photos/800/600 (Random Image)
             </button>
             <button
               onClick={() => setImageUrl('https://images.unsplash.com/photo-1574158622682-e40e69881006?w=800')}
               className="block text-blue-600 hover:underline"
             >
-              https://images.unsplash.com/photo-1574158622682-e40e69881006?w=800 (猫咪图片)
+              https://images.unsplash.com/photo-1574158622682-e40e69881006?w=800 (Cat Image)
             </button>
           </div>
         </div>

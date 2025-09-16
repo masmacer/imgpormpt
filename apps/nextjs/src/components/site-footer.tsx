@@ -1,5 +1,6 @@
 import * as React from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { cn } from "@saasfly/ui";
 
@@ -15,6 +16,7 @@ function getCopyrightText(
 
 export function SiteFooter({
   className,
+  params,
   dict,
 }: {
   className?: string;
@@ -26,19 +28,55 @@ export function SiteFooter({
 }) {
   return (
     <footer className={cn(className)}>
-      <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
-        <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-          <Image
-            src="/images/avatars/saasfly-logo.svg"
-            width="36"
-            height="36"
-            alt=""
-          />
-          <p className="text-center text-sm leading-loose md:text-left">
-            {getCopyrightText(dict)}
+      <div className="container py-10">
+        {/* Main footer content */}
+        <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
+          {/* Left side - Brand and copyright */}
+          <div className="flex flex-col items-center gap-2 md:items-start">
+            <div className="text-xl font-bold">imageprompt</div>
+            <p className="text-center text-sm text-muted-foreground md:text-left">
+              Transform your images into better AI prompts
+            </p>
+          </div>
+
+          {/* Center - Navigation links */}
+          <div className="flex flex-wrap justify-center gap-6 text-sm">
+            <Link 
+              href={`/${params.lang}/about`} 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              About Us
+            </Link>
+            <Link 
+              href={`/${params.lang}/contact`} 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Contact Us
+            </Link>
+            <Link 
+              href={`/${params.lang}/terms`} 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Terms of Service
+            </Link>
+            <Link 
+              href={`/${params.lang}/privacy`} 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Privacy Policy
+            </Link>
+          </div>
+
+          {/* Right side - Mode toggle */}
+          <ModeToggle />
+        </div>
+
+        {/* Bottom copyright */}
+        <div className="mt-8 pt-4 border-t border-border">
+          <p className="text-center text-sm text-muted-foreground">
+            Copyright © {new Date().getFullYear()} imageprompt. All rights reserved.
           </p>
         </div>
-        <ModeToggle />
       </div>
     </footer>
   );

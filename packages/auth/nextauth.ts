@@ -31,6 +31,10 @@ declare module "next-auth" {
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
+    // 设置会话最大存活时间为30天（默认是30天）
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    // 设置会话更新间隔为1天
+    updateAge: 24 * 60 * 60, // 1 day
   },
   pages: {
     signIn: "/login",

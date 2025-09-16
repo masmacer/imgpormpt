@@ -15,7 +15,8 @@
     "typecheck": "turbo typecheck",
     "postinstall": "bun run check-deps",
     "check-deps": "check-dependency-version-consistency .",
-    "gen": "turbo gen --config 'turbo/generators/config.ts'"
+    "gen": "turbo gen --config 'turbo/generators/config.ts'",
+    "cleanup:sessions": "tsx scripts/cleanup-sessions.ts"
   },
   "devDependencies": {
     "@turbo/gen": "1.13.3",
@@ -34,7 +35,7 @@
     "packages/*",
     "tooling/*"
   ],
-  "packageManager": "bun@v1.1.10",
+  "packageManager": "bun@1.1.10",
   "dependencies": {
     "@clerk/nextjs": "^6.20.0",
     "kysely": "^0.28.5",
