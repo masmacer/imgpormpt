@@ -36,6 +36,7 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
     error: "/auth/error", 
   },
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   adapter: KyselyAdapter(db),
@@ -82,6 +83,14 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // 如果是相对路径，添加 baseUrl
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // 如果是同域名的绝对路径，直接返回
+      else if (new URL(url).origin === baseUrl) return url;
+      // 默认跳转到首页
+      return baseUrl;
+    },
     session({ token, session }) {
       if (token) {
         if (session.user) {
