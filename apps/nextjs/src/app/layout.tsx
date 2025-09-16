@@ -98,7 +98,7 @@ export const metadata = {
     },
   },
   icons: {
-    icon: "/logo.svg",
+    icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
   metadataBase: new URL("https://imagepromptgenerator.org/"),
