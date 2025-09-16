@@ -179,8 +179,9 @@ export default function IndexPage({
             <Button 
               className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg font-semibold rounded-lg"
               size="lg"
+              asChild
             >
-              Try Free Image to Prompt Generator
+              <Link href="#tool">Try Free Image to Prompt Generator</Link>
             </Button>
             <Button 
               variant="outline" 
@@ -247,7 +248,9 @@ export default function IndexPage({
       </section>
 
       {/* Interactive Tool Section */}
-      <ImageToPromptClient />
+      <div id="tool" className="scroll-mt-20">
+        <ImageToPromptClient />
+      </div>
 
       {/* Features Section - SEO Enhanced */}
       <section className="container mx-auto px-4 py-16">
@@ -409,8 +412,9 @@ export default function IndexPage({
           <Button 
             className="bg-purple-600 hover:bg-purple-700 text-white px-12 py-4 text-xl font-semibold rounded-lg"
             size="lg"
+            asChild
           >
-            Get Started with Image to Prompt Generator
+            <Link href="#tool">Get Started with Image to Prompt Generator</Link>
           </Button>
         </div>
       </section>
