@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Button } from "@saasfly/ui/button";
 import { Card } from "@saasfly/ui/card";
 import { useImageToPrompt } from "~/hooks/use-image-to-prompt";
+import { CreditsDisplay } from "~/components/credits-display";
 
 // AI模型数据
 const aiModels = [
@@ -110,6 +111,13 @@ export default function ImageToPromptClient() {
   return (
     <section className="container pt-24 pb-32">
       <div className="max-w-4xl mx-auto">
+        {/* Credits Display */}
+        <div className="flex justify-center mb-6">
+          <div className="w-full max-w-md">
+            <CreditsDisplay showDetails={false} />
+          </div>
+        </div>
+
         {/* Tab Navigation */}
         <div className="flex justify-center mb-8">
           <div className="bg-muted rounded-lg p-1 inline-flex">

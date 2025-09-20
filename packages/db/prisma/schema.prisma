@@ -60,13 +60,15 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(dbgenerated("gen_random_uuid()"))
+  id            String         @id @default(dbgenerated("gen_random_uuid()"))
   name          String?
-  email         String?   @unique
+  email         String?        @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
+  userCredits   UserCredits?
+  creditUsage   CreditUsage[]
 }
 
 model VerificationToken {
@@ -100,4 +102,46 @@ enum Status {
   RUNNING
   STOPPED
   DELETED
+}
+
+model CreditPlans {
+  id             String        @id @default(dbgenerated("gen_random_uuid()"))
+  planName       String        @unique
+  monthlyCredits Int
+  dailyCredits   Int
+  description    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @default(now())
+  userCredits    UserCredits[]
+}
+
+model UserCredits {
+  id               String   @id @default(dbgenerated("gen_random_uuid()"))
+  userId           String   @unique
+  totalCredits     Int      @default(0)
+  usedCredits      Int      @default(0)
+  availableCredits Int      @default(0)
+  planId           String?
+  lastResetDate    DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creditPlan CreditPlans? @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+}
+
+model CreditUsage {
+  id          String   @id @default(dbgenerated("gen_random_uuid()"))
+  userId      String
+  action      String
+  creditsUsed Int
+  description String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
 }

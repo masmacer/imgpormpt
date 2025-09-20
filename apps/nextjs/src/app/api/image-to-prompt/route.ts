@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getCurrentUser } from '@saasfly/auth';
+import { CreditsService } from '~/lib/credits-service';
 
 // 直接内联 Coze API 调用逻辑
 async function uploadFileToCoze(file: File): Promise<string> {
@@ -144,6 +146,32 @@ export async function POST(request: NextRequest) {
   try {
     console.log('=== Image to Prompt API Started (Inline) ===');
     
+    // 检查用户认证
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // 检查积分是否足够
+    const hasCredits = await CreditsService.hasEnoughCredits(user.id, 1);
+    if (!hasCredits) {
+      const credits = await CreditsService.getUserCredits(user.id);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Insufficient credits',
+          message: credits?.dailyLimit && credits.dailyLimit > 0
+            ? `You have reached your daily limit of ${credits.dailyLimit} prompts. Upgrade to Pro for unlimited prompts!`
+            : 'You have no credits remaining. Please upgrade your plan or wait for the next reset.',
+          credits: credits
+        },
+        { status: 402 }
+      );
+    }
+    
     const contentType = request.headers.get('content-type') || '';
     let file: File | null = null;
     let imageUrl: string | null = null;
@@ -257,13 +285,29 @@ export async function POST(request: NextRequest) {
     console.log('=== API Call Completed Successfully ===');
     console.log('Generated prompt length:', prompt?.length);
 
+    // 消费积分
+    const creditConsumed = await CreditsService.consumeCredits(
+      user.id,
+      'generate_prompt',
+      1,
+      `Generated prompt using ${model}`
+    );
+
+    if (!creditConsumed) {
+      console.warn('Failed to consume credits, but continuing with response');
+    }
+
+    // 获取更新后的积分信息
+    const updatedCredits = await CreditsService.getUserCredits(user.id);
+
     const responseData: any = {
       success: true,
       data: {
         prompt,
         model,
         language
-      }
+      },
+      credits: updatedCredits
     };
 
     // 根据输入类型添加相应的信息

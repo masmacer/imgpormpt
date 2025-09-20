@@ -22,6 +22,23 @@ export type Account = {
   id_token: string | null;
   session_state: string | null;
 };
+export type CreditPlans = {
+  id: Generated<string>;
+  planName: string;
+  monthlyCredits: number;
+  dailyCredits: number;
+  description: string | null;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Generated<Timestamp>;
+};
+export type CreditUsage = {
+  id: Generated<string>;
+  userId: string;
+  action: string;
+  creditsUsed: number;
+  description: string | null;
+  createdAt: Generated<Timestamp>;
+};
 export type Customer = {
   id: Generated<number>;
   authUserId: string;
@@ -59,6 +76,17 @@ export type User = {
   emailVerified: Timestamp | null;
   image: string | null;
 };
+export type UserCredits = {
+  id: Generated<string>;
+  userId: string;
+  totalCredits: Generated<number>;
+  usedCredits: Generated<number>;
+  availableCredits: Generated<number>;
+  planId: string | null;
+  lastResetDate: Generated<Timestamp>;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Generated<Timestamp>;
+};
 export type VerificationToken = {
   identifier: string;
   token: string;
@@ -66,9 +94,12 @@ export type VerificationToken = {
 };
 export type DB = {
   Account: Account;
+  CreditPlans: CreditPlans;
+  CreditUsage: CreditUsage;
   Customer: Customer;
   K8sClusterConfig: K8sClusterConfig;
   Session: Session;
   User: User;
+  UserCredits: UserCredits;
   VerificationToken: VerificationToken;
 };

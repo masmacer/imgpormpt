@@ -133,6 +133,7 @@
     "./toaster": "./src/toaster.tsx",
     "./typewriter-effect": "./src/typewriter-effect.tsx",
     "./use-toast": "./src/use-toast.tsx",
+    "./progress": "./src/progress.tsx",
     "./wobble-card": "./src/wobble-card.tsx"
   }
 }

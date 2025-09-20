@@ -7,6 +7,8 @@ import {
 } from "@saasfly/ui/card";
 
 import { DashboardShell } from "~/components/shell";
+import { CreditsDisplay } from "~/components/credits-display";
+import { CreditHistory } from "~/components/credit-history";
 import type { Locale } from "~/config/i18n-config";
 import { getDictionary } from "~/lib/get-dictionary";
 import { trpc } from "~/trpc/server";
@@ -80,11 +82,9 @@ async function SubscriptionCard({ dict }: { dict: Record<string, string> }) {
 
 function UsageCard() {
   return (
-    <Card className="mt-4">
-      <CardHeader>
-        <CardTitle>Usage</CardTitle>
-      </CardHeader>
-      <CardContent>None</CardContent>
-    </Card>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+      <CreditsDisplay />
+      <CreditHistory />
+    </div>
   );
 }
