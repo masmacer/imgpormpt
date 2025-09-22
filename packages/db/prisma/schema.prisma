@@ -105,7 +105,7 @@ enum Status {
 }
 
 model CreditPlans {
-  id             String        @id @default(dbgenerated("gen_random_uuid()"))
+  id             String        @id
   planName       String        @unique
   monthlyCredits Int
   dailyCredits   Int
@@ -116,7 +116,7 @@ model CreditPlans {
 }
 
 model UserCredits {
-  id               String   @id @default(dbgenerated("gen_random_uuid()"))
+  id               String   @id
   userId           String   @unique
   totalCredits     Int      @default(0)
   usedCredits      Int      @default(0)
@@ -133,7 +133,7 @@ model UserCredits {
 }
 
 model CreditUsage {
-  id          String   @id @default(dbgenerated("gen_random_uuid()"))
+  id          String   @id
   userId      String
   action      String
   creditsUsed Int

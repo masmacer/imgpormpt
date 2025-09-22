@@ -50,3 +50,11 @@ package-lock.json
 .idea/
 
 .env
+
+# temporary test files
+test-*.ts
+test-*.js
+temp-*.ts
+temp-*.js
+debug-*.ts
+debug-*.js

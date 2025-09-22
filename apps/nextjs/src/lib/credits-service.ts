@@ -1,5 +1,6 @@
 import { db } from "@saasfly/db";
 import { getCurrentUser } from "@saasfly/auth";
+import { randomUUID } from "crypto";
 
 export interface CreditBalance {
   totalCredits: number;
@@ -38,24 +39,23 @@ export class CreditsService {
         return await this.getUserCredits(userId);
       }
 
-      // 获取用户订阅计划
-      const customer = await db
-        .selectFrom("Customer")
-        .select(["plan"])
-        .where("authUserId", "=", userId)
-        .executeTakeFirst();
-
-      const planName = customer?.plan || "FREE";
+      // 获取用户积分计划，默认为免费计划
+      let planId = "free-plan";
+      
+      // 尝试从UserCredits表获取planId
+      if (userCredits.planId) {
+        planId = userCredits.planId;
+      }
       
       // 获取计划的积分配置
       const creditPlan = await db
         .selectFrom("CreditPlans")
         .selectAll()
-        .where("id", "=", planName.toLowerCase())
+        .where("id", "=", planId)
         .executeTakeFirst();
 
       if (!creditPlan) {
-        throw new Error(`Credit plan not found: ${planName}`);
+        throw new Error(`Credit plan not found: ${planId}`);
       }
 
       // 计算今日已使用积分
@@ -139,7 +139,7 @@ export class CreditsService {
         await trx
           .insertInto("CreditUsage")
           .values({
-            id: crypto.randomUUID(),
+            id: randomUUID(),
             userId,
             action,
             creditsUsed,
@@ -176,7 +176,7 @@ export class CreditsService {
       await db
         .insertInto("CreditUsage")
         .values({
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           userId,
           action: "credit_added",
           creditsUsed: -creditsToAdd, // 负数表示添加
@@ -230,20 +230,14 @@ export class CreditsService {
    */
   private static async initializeUserCredits(userId: string): Promise<void> {
     try {
-      // 获取用户订阅计划
-      const customer = await db
-        .selectFrom("Customer")
-        .select(["plan"])
-        .where("authUserId", "=", userId)
-        .executeTakeFirst();
-
-      const planName = customer?.plan || "FREE";
+      // 默认使用免费计划
+      const planId = "free-plan";
       
       // 获取计划的积分配置
       const creditPlan = await db
         .selectFrom("CreditPlans")
         .selectAll()
-        .where("id", "=", planName.toLowerCase())
+        .where("id", "=", planId)
         .executeTakeFirst();
 
       const initialCredits = creditPlan?.monthlyCredits || 300; // 默认300积分
@@ -252,11 +246,12 @@ export class CreditsService {
       await db
         .insertInto("UserCredits")
         .values({
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           userId,
           totalCredits: initialCredits,
           usedCredits: 0,
           availableCredits: initialCredits,
+          planId: planId,
           lastResetDate: new Date(),
           createdAt: new Date(),
           updatedAt: new Date()

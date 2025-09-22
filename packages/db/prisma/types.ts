@@ -23,7 +23,7 @@ export type Account = {
   session_state: string | null;
 };
 export type CreditPlans = {
-  id: Generated<string>;
+  id: string;
   planName: string;
   monthlyCredits: number;
   dailyCredits: number;
@@ -32,7 +32,7 @@ export type CreditPlans = {
   updatedAt: Generated<Timestamp>;
 };
 export type CreditUsage = {
-  id: Generated<string>;
+  id: string;
   userId: string;
   action: string;
   creditsUsed: number;
@@ -77,7 +77,7 @@ export type User = {
   image: string | null;
 };
 export type UserCredits = {
-  id: Generated<string>;
+  id: string;
   userId: string;
   totalCredits: Generated<number>;
   usedCredits: Generated<number>;

@@ -6,20 +6,28 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
+      console.log('No user found in credits API');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('Getting credits for user:', user.id);
     const credits = await CreditsService.getUserCredits(user.id);
     if (!credits) {
+      console.error('Failed to get credits for user:', user.id);
       return NextResponse.json({ error: 'Failed to get credits' }, { status: 500 });
     }
 
+    console.log('Credits retrieved successfully:', credits);
     return NextResponse.json(credits);
 
   } catch (error) {
     console.error('Error getting user credits:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'Unknown error');
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
