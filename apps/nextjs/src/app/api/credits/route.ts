@@ -11,10 +11,17 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Getting credits for user:', user.id);
+    console.log('User details:', { id: user.id, email: user.email, name: user.name });
+    
     const credits = await CreditsService.getUserCredits(user.id);
     if (!credits) {
       console.error('Failed to get credits for user:', user.id);
-      return NextResponse.json({ error: 'Failed to get credits' }, { status: 500 });
+      console.error('This usually means the user credits initialization failed');
+      return NextResponse.json({ 
+        error: 'Failed to get credits',
+        userId: user.id,
+        userEmail: user.email 
+      }, { status: 500 });
     }
 
     console.log('Credits retrieved successfully:', credits);
