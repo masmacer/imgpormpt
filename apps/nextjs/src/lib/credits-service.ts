@@ -27,7 +27,7 @@ export class CreditsService {
   static async getUserCredits(userId: string): Promise<CreditBalance | null> {
     try {
       // 获取用户积分信息
-      const userCredits = await db
+      let userCredits = await db
         .selectFrom("UserCredits")
         .selectAll()
         .where("userId", "=", userId)
@@ -35,8 +35,29 @@ export class CreditsService {
 
       if (!userCredits) {
         // 如果用户没有积分记录，初始化
+        console.log(`Initializing credits for new user: ${userId}`);
         await this.initializeUserCredits(userId);
-        return await this.getUserCredits(userId);
+        
+        // 重新获取，如果还是失败就返回默认值
+        userCredits = await db
+          .selectFrom("UserCredits")
+          .selectAll()
+          .where("userId", "=", userId)
+          .executeTakeFirst();
+        
+        if (!userCredits) {
+          console.error(`Failed to initialize credits for user: ${userId}`);
+          // 返回默认的积分信息而不是null
+          return {
+            totalCredits: 300,
+            usedCredits: 0,
+            availableCredits: 300,
+            dailyLimit: 10,
+            dailyUsed: 0,
+            dailyRemaining: 10,
+            planName: "Free Plan"
+          };
+        }
       }
 
       // 获取用户积分计划，默认为免费计划
@@ -230,6 +251,30 @@ export class CreditsService {
    */
   private static async initializeUserCredits(userId: string): Promise<void> {
     try {
+      // 检查用户是否已有积分记录（避免重复创建）
+      const existing = await db
+        .selectFrom("UserCredits")
+        .select(["id"])
+        .where("userId", "=", userId)
+        .executeTakeFirst();
+
+      if (existing) {
+        console.log(`User ${userId} already has credits record`);
+        return;
+      }
+
+      // 验证用户是否存在
+      const userExists = await db
+        .selectFrom("User")
+        .select(["id"])
+        .where("id", "=", userId)
+        .executeTakeFirst();
+
+      if (!userExists) {
+        console.error(`User ${userId} does not exist in User table`);
+        throw new Error(`User ${userId} not found`);
+      }
+
       // 默认使用免费计划
       const planId = "free-plan";
       
@@ -258,8 +303,10 @@ export class CreditsService {
         })
         .execute();
 
+      console.log(`Successfully initialized credits for user ${userId}`);
+
     } catch (error) {
-      console.error("Error initializing user credits:", error);
+      console.error(`Error initializing user credits for ${userId}:`, error);
       throw error;
     }
   }

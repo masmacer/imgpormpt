@@ -2,6 +2,7 @@ import { getServerSession, NextAuthOptions, User } from "next-auth";
 import { KyselyAdapter } from "@auth/kysely-adapter";
 import GoogleProvider from "next-auth/providers/google";
 import EmailProvider from "next-auth/providers/email";
+import crypto from "crypto";
 
 import { MagicLinkEmail, resend, siteConfig } from "@saasfly/common";
 
@@ -120,6 +121,52 @@ export const authOptions: NextAuthOptions = {
         }
         return token;
       }
+
+      // 检查并初始化用户积分（异步，不阻塞登录）
+      if (dbUser.id) {
+        // 使用异步方式初始化积分，避免阻塞登录流程
+        setImmediate(async () => {
+          try {
+            const hasCredits = await db
+              .selectFrom("UserCredits")
+              .select(["id"])
+              .where("userId", "=", dbUser.id)
+              .executeTakeFirst();
+
+            if (!hasCredits) {
+              console.log(`Auto-initializing credits for user: ${dbUser.id}`);
+              
+              const freePlan = await db
+                .selectFrom("CreditPlans")
+                .selectAll()
+                .where("id", "=", "free-plan")
+                .executeTakeFirst();
+
+              if (freePlan) {
+                await db
+                  .insertInto("UserCredits")
+                  .values({
+                    id: crypto.randomUUID(),
+                    userId: dbUser.id,
+                    totalCredits: freePlan.monthlyCredits,
+                    usedCredits: 0,
+                    availableCredits: freePlan.monthlyCredits,
+                    planId: "free-plan",
+                    lastResetDate: new Date(),
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                  })
+                  .execute();
+                
+                console.log(`Successfully auto-initialized credits for user: ${dbUser.id}`);
+              }
+            }
+          } catch (error) {
+            console.error(`Failed to auto-initialize credits for user ${dbUser.id}:`, error);
+          }
+        });
+      }
+
       let isAdmin = false;
       if (env.ADMIN_EMAIL) {
         const adminEmails = env.ADMIN_EMAIL.split(",");
