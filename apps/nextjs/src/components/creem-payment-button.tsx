@@ -7,6 +7,7 @@ interface CreemPaymentButtonProps {
   planName: string;
   price: number;
   planId: string;
+  productType?: 'CREDITS' | 'SUBSCRIPTION';
   onSuccess?: () => void;
   onError?: (error: any) => void;
   className?: string;
@@ -17,6 +18,7 @@ export function CreemPaymentButton({
   planName,
   price,
   planId,
+  productType = 'SUBSCRIPTION',
   onSuccess,
   onError,
   className,
@@ -39,6 +41,7 @@ export function CreemPaymentButton({
           planName,
           price,
           currency: 'USD',
+          productType,
         }),
       });
 

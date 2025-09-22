@@ -191,14 +191,14 @@ export function CreditsDisplay({ className, showDetails = true }: CreditsDisplay
           </div>
         )}
 
-        {/* Action Button - 暂时隐藏，测试阶段 */}
-        {/* {(isLowCredits || isOutOfCredits) && credits.planName.toLowerCase().includes('free') && (
+        {/* Action Button */}
+        {(isLowCredits || isOutOfCredits) && credits.planName.toLowerCase().includes('free') && (
           <Button asChild className="w-full" size="sm">
             <Link href="/pricing">
               Upgrade Plan
             </Link>
           </Button>
-        )} */}
+        )}
       </CardContent>
     </Card>
   );

@@ -12,11 +12,10 @@ export const getMarketingConfig = async ({
   const dict = await getDictionary(lang);
   return {
     mainNav: [
-      // 暂时隐藏价格入口，测试阶段
-      // {
-      //   title: dict.marketing.main_nav_pricing,
-      //   href: "/pricing",
-      // },
+      {
+        title: dict.marketing.main_nav_pricing,
+        href: "/pricing",
+      },
     ],
   };
 };

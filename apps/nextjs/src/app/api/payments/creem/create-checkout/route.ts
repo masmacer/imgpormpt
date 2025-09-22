@@ -1,16 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getCurrentUser } from '@saasfly/auth';
+import { CREEM_PRODUCTS, type ProductType } from '~/config/products';
 
 export async function POST(request: NextRequest) {
   try {
-    const { planId, planName, price, currency = 'USD' } = await request.json();
+    // 获取当前用户（需要登录才能购买）
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const { planId, planName, price, currency = 'USD', productType } = await request.json();
 
     // 验证必需的参数
-    if (!planId || !planName || !price) {
+    if (!planId || !planName || !price || !productType) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 }
       );
     }
+
+    // 验证产品类型
+    if (!CREEM_PRODUCTS[productType as ProductType]) {
+      return NextResponse.json(
+        { error: 'Invalid product type' },
+        { status: 400 }
+      );
+    }
+
+    const productConfig = CREEM_PRODUCTS[productType as ProductType];
 
     // 获取 Creem 配置
     const creemPublicKey = process.env.NEXT_PUBLIC_CREEM_PUBLIC_KEY;
@@ -29,14 +50,17 @@ export async function POST(request: NextRequest) {
     const checkoutData = {
       amount: price * 100, // Creem 通常使用分作为单位
       currency: currency,
-      product_name: "Image to Prompt Generator", // 统一产品名
-      price_id: planId, // 使用价格ID而不是产品ID
-      plan_name: planName, // 套餐名称
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?plan=${planId}`,
+      product_name: "Image to Prompt Generator",
+      price_id: planId,
+      plan_name: planName,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?plan=${planId}&type=${productType}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       metadata: {
+        user_id: user.id,
         plan_id: planId,
         plan_name: planName,
+        product_type: productType,
+        credits_amount: productConfig.credits,
       },
     };
 
