@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { randomUUID } from 'crypto';
 import { db } from '@saasfly/db';
 import { CreditsService } from '~/lib/credits-service';
 import { CREEM_PRODUCTS, findProductByPriceId } from '~/config/products';
@@ -215,8 +216,6 @@ async function updateUserSubscription(userId: string, planId: string) {
         .values({
           authUserId: userId,
           plan: 'PRO',
-          createdAt: new Date(),
-          updatedAt: new Date(),
         })
         .execute();
     }
@@ -242,6 +241,7 @@ async function logPaymentSuccess(
     await db
       .insertInto('CreditUsage')
       .values({
+        id: randomUUID(),
         userId,
         action: 'payment_success',
         creditsUsed: -Math.round(amount / 100), // 负数表示增加，这里简化为美分转美元
