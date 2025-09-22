@@ -9,6 +9,7 @@ import { MagicLinkEmail, resend, siteConfig } from "@saasfly/common";
 import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from "next";
 
 import { db } from "./db";
+import { db as mainDb } from "@saasfly/db";
 import { env } from "./env.mjs";
 
 type UserId = string;
@@ -127,7 +128,7 @@ export const authOptions: NextAuthOptions = {
         // 使用异步方式初始化积分，避免阻塞登录流程
         setImmediate(async () => {
           try {
-            const hasCredits = await db
+            const hasCredits = await mainDb
               .selectFrom("UserCredits")
               .select(["id"])
               .where("userId", "=", dbUser.id)
@@ -136,14 +137,14 @@ export const authOptions: NextAuthOptions = {
             if (!hasCredits) {
               console.log(`Auto-initializing credits for user: ${dbUser.id}`);
               
-              const freePlan = await db
+              const freePlan = await mainDb
                 .selectFrom("CreditPlans")
                 .selectAll()
                 .where("id", "=", "free-plan")
                 .executeTakeFirst();
 
               if (freePlan) {
-                await db
+                await mainDb
                   .insertInto("UserCredits")
                   .values({
                     id: crypto.randomUUID(),
