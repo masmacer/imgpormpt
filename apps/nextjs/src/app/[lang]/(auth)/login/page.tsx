@@ -51,7 +51,7 @@ export default async function LoginPage({
             {dict.login.welcome_back}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {dict.login.signin_title}
+            Sign in with your Google account to continue
           </p>
         </div>
         <UserAuthForm lang={lang} dict={dict.login} />
