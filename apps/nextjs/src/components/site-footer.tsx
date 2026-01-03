@@ -65,6 +65,12 @@ export function SiteFooter({
             >
               Privacy Policy
             </Link>
+            <Link 
+              href={`/${params.lang}/refund`} 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Refund Policy
+            </Link>
           </div>
 
           {/* Right side - Mode toggle */}

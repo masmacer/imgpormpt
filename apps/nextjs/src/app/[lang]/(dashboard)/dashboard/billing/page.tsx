@@ -19,6 +19,9 @@ export const metadata = {
   description: "Manage billing and your subscription plan.",
 };
 
+// 强制动态渲染，因为此页面需要读取用户的 session/cookies
+export const dynamic = 'force-dynamic';
+
 interface Subscription {
   plan: string | null;
   endsAt: Date | null;

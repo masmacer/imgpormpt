@@ -1,6 +1,7 @@
 import type { Locale } from "~/config/i18n-config";
 import { CreemPaymentButton } from "~/components/creem-payment-button";
 import { CREEM_PRODUCTS } from "~/config/products";
+import Link from "next/link";
 
 export default async function PricingPage({ params: { lang } }: { params: { lang: Locale } }) {
   const isZh = lang === 'zh';
@@ -32,19 +33,19 @@ export default async function PricingPage({ params: { lang } }: { params: { lang
               <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
               </svg>
-              {isZh ? '每日10次生成' : '10 prompts per day'}
+              {isZh ? '每日3次生成' : '3 prompts per day'}
             </li>
             <li className="flex items-center">
               <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
               </svg>
-              {isZh ? '基础AI模型' : 'Basic AI models'}
+              {isZh ? '每月最多90次' : 'Up to 90 per month'}
             </li>
             <li className="flex items-center">
               <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
               </svg>
-              {isZh ? '标准支持' : 'Standard support'}
+              {isZh ? '免费试用' : 'Try before you buy'}
             </li>
           </ul>
           <button className="w-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 py-3 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" disabled>
@@ -143,6 +144,23 @@ export default async function PricingPage({ params: { lang } }: { params: { lang
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Refund Policy Link */}
+      <div className="text-center mt-12 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {isZh 
+            ? '购买前请查看我们的' 
+            : 'Please review our'
+          }{' '}
+          <Link 
+            href={`/${lang}/refund`} 
+            className="text-purple-600 hover:text-purple-700 underline font-semibold"
+          >
+            {isZh ? '退款政策' : 'Refund Policy'}
+          </Link>
+          {isZh ? '' : ' before making a purchase'}
+        </p>
       </div>
     </section>
   );

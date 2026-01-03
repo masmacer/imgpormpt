@@ -45,8 +45,8 @@ CREATE INDEX IF NOT EXISTS "CreditUsage_createdAt_idx" ON "CreditUsage"("created
 
 -- 5. 插入基础积分计划数据
 INSERT INTO "CreditPlans" ("id", "planName", "dailyCredits", "monthlyCredits", "description") VALUES
-('free-plan', 'Free Plan', 10, 300, 'Free tier with daily limits'),
-('pro-plan', 'Pro Plan', 0, 10000, 'Professional tier with unlimited daily usage'),
+('free-plan', 'Free Plan', 3, 90, 'Free tier with daily limits'),
+('pro-plan', 'Pro Plan', 0, 1000, 'Professional tier with unlimited daily usage'),
 ('credits-pack', 'Credits Pack', 0, 100, 'One-time purchase credits pack')
 ON CONFLICT ("planName") DO NOTHING;
 

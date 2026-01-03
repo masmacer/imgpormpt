@@ -3,8 +3,8 @@ export const CREEM_PRODUCTS = {
   CREDITS: {
     name: 'Credits Pack',
     nameZh: '积分包',
-    description: 'Get 100 credits to generate AI prompts',
-    descriptionZh: '获得100积分用于生成AI提示词',
+    description: 'Get 100 credits for AI generation',
+    descriptionZh: '获得100积分用于AI生成',
     price: 9.90,
     currency: 'USD',
     credits: 100,
@@ -12,42 +12,40 @@ export const CREEM_PRODUCTS = {
     productId: process.env.CREEM_CREDITS_PRODUCT_ID || '',
     priceId: process.env.CREEM_CREDITS_PRICE_ID || '',
     features: [
-      '100 AI prompt generations',
+      '100 credits',
       'No expiration date',
-      'High-quality analysis',
-      'Multi-language support'
+      'Use anytime',
+      'Perfect for occasional use'
     ],
     featuresZh: [
-      '100次AI提示词生成',
+      '100积分',
       '积分永不过期',
-      '高质量图片分析',
-      '多语言支持'
+      '随时使用',
+      '适合偶尔使用'
     ]
   },
   SUBSCRIPTION: {
     name: 'Pro Monthly',
     nameZh: '专业版月卡',
-    description: 'Unlimited generations for one month',
-    descriptionZh: '一个月内无限制生成',
+    description: '1,000 credits per month',
+    descriptionZh: '每月1000积分',
     price: 19.90,
     currency: 'USD',
-    credits: 10000, // 给一个很大的数量作为"无限制"
+    credits: 1000,
     type: 'subscription' as const,
     productId: process.env.CREEM_SUBSCRIPTION_PRODUCT_ID || '',
     priceId: process.env.CREEM_SUBSCRIPTION_PRICE_ID || '',
     features: [
-      'Unlimited AI prompt generations',
-      'Priority processing',
-      'Advanced image analysis',
-      'API access',
-      'Premium support'
+      '1,000 credits per month',
+      'No daily limits',
+      'Auto-renews monthly',
+      'Best value for regular users'
     ],
     featuresZh: [
-      '无限制AI提示词生成',
-      '优先处理',
-      '高级图片分析',
-      'API访问权限',
-      '专业技术支持'
+      '每月1000积分',
+      '无每日限制',
+      '每月自动续订',
+      '高频使用最划算'
     ]
   }
 } as const;
@@ -76,14 +74,14 @@ export const CREDIT_PLANS = {
     id: 'free',
     name: 'Free Plan',
     nameZh: '免费计划',
-    dailyCredits: 10,
-    monthlyCredits: 300
+    dailyCredits: 3,
+    monthlyCredits: 90
   },
   PRO: {
     id: 'pro',
     name: 'Pro Plan',
     nameZh: '专业计划',
     dailyCredits: 0, // 无每日限制
-    monthlyCredits: 10000
+    monthlyCredits: 1000
   }
 } as const;
