@@ -34,11 +34,10 @@ export async function POST(request: NextRequest) {
     const productConfig = CREEM_PRODUCTS[productType as ProductType];
 
     // 获取 Creem 配置
-    const creemPublicKey = process.env.NEXT_PUBLIC_CREEM_PUBLIC_KEY;
     const creemSecretKey = process.env.CREEM_SECRET_KEY;
     const environment = process.env.NEXT_PUBLIC_CREEM_ENVIRONMENT || 'sandbox';
 
-    if (!creemPublicKey || !creemSecretKey) {
+    if (!creemSecretKey) {
       console.error('Creem credentials not configured');
       return NextResponse.json(
         { error: 'Payment system not configured' },
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
       amount: price * 100, // Creem 通常使用分作为单位
       currency: currency,
       product_name: "Image to Prompt Generator",
-      price_id: planId,
+      product_id: planId,  // 改为 product_id
       plan_name: planName,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?plan=${planId}&type=${productType}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,

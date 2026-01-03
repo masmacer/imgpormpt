@@ -14,7 +14,7 @@ export default async function PricingPage({ params: { lang } }: { params: { lang
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
           {isZh 
-            ? '选择最适合您的AI图片转提示词生成方案。免费开始，按需升级。'
+            ? '选择最适合您的AI图片转提示词生成方案。免费开始,按需升级。'
             : 'Choose the perfect plan for your AI-powered image to prompt generation needs. Start free and upgrade as you grow.'
           }
         </p>
@@ -71,7 +71,7 @@ export default async function PricingPage({ params: { lang } }: { params: { lang
             ))}
           </ul>
           <CreemPaymentButton
-            planId={CREEM_PRODUCTS.CREDITS.priceId}
+            planId={CREEM_PRODUCTS.CREDITS.productId}
             planName={CREEM_PRODUCTS.CREDITS.name}
             price={CREEM_PRODUCTS.CREDITS.price}
             productType="CREDITS"
@@ -104,7 +104,7 @@ export default async function PricingPage({ params: { lang } }: { params: { lang
             ))}
           </ul>
           <CreemPaymentButton
-            planId={CREEM_PRODUCTS.SUBSCRIPTION.priceId}
+            planId={CREEM_PRODUCTS.SUBSCRIPTION.productId}
             planName={CREEM_PRODUCTS.SUBSCRIPTION.name}
             price={CREEM_PRODUCTS.SUBSCRIPTION.price}
             productType="SUBSCRIPTION"
