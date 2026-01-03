@@ -45,27 +45,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 创建 Creem 结账会话的配置
+    // 根据 Creem API 文档的正确参数格式
     const checkoutData = {
-      amount: price * 100, // Creem 通常使用分作为单位
-      currency: currency,
-      product_name: "Image to Prompt Generator",
-      product_id: planId,  // 改为 product_id
-      plan_name: planName,
+      product_id: productConfig.productId, // 使用配置中的 productId（环境变量）
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?plan=${planId}&type=${productType}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
+      customer_email: user.email || undefined,
       metadata: {
         user_id: user.id,
         plan_id: planId,
         plan_name: planName,
         product_type: productType,
-        credits_amount: productConfig.credits,
+        credits_amount: productConfig.credits.toString(),
       },
     };
 
+    console.log('Creating Creem checkout with:', {
+      product_id: productConfig.productId,
+      environment,
+      user_id: user.id,
+    });
+
     // 调用 Creem API 创建结账会话
-    // 注意: 这里需要根据 Creem 的实际 API 文档调整
-    const creemResponse = await fetch(`https://api.creem.io/v1/checkout-sessions`, {
+    // 注意：根据 Creem 文档，端点可能是 /checkout 而不是 /checkout-sessions
+    const apiUrl = environment === 'production' 
+      ? 'https://api.creem.io/v1/checkout'
+      : 'https://sandbox-api.creem.io/v1/checkout';
+
+    const creemResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${creemSecretKey}`,
@@ -74,26 +81,38 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(checkoutData),
     });
 
+    const responseText = await creemResponse.text();
+    
     if (!creemResponse.ok) {
-      const errorData = await creemResponse.text();
-      console.error('Creem API error:', errorData);
+      console.error('Creem API error:', {
+        status: creemResponse.status,
+        statusText: creemResponse.statusText,
+        body: responseText,
+      });
+      
       return NextResponse.json(
-        { error: 'Failed to create checkout session' },
-        { status: 500 }
+        { 
+          error: 'Failed to create checkout session',
+          details: responseText 
+        },
+        { status: creemResponse.status }
       );
     }
 
-    const session = await creemResponse.json();
+    const session = JSON.parse(responseText);
 
     return NextResponse.json({
-      checkoutUrl: session.url || session.checkout_url,
-      sessionId: session.id,
+      checkoutUrl: session.url || session.checkout_url || session.redirect_url,
+      sessionId: session.id || session.session_id,
     });
 
   } catch (error) {
     console.error('Checkout creation error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
