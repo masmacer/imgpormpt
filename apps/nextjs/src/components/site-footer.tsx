@@ -26,6 +26,9 @@ export function SiteFooter({
 
   dict: Record<string, string | Record<string, string>>;
 }) {
+  const { lang } = params;
+  const isZh = lang === "zh";
+
   return (
     <footer className={cn(className)}>
       <div className="container py-10">
@@ -70,6 +73,12 @@ export function SiteFooter({
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Refund Policy
+            </Link>
+            <Link 
+              href={`/${lang}/disclaimer`}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isZh ? '产品声明' : 'Disclaimer'}
             </Link>
           </div>
 

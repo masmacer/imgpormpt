@@ -161,6 +161,20 @@ export default async function PricingPage({ params: { lang } }: { params: { lang
           </Link>
           {isZh ? '' : ' before making a purchase'}
         </p>
+        
+        {/* Independent Product Disclaimer - 新添加 */}
+        <p className="text-xs text-gray-500 dark:text-gray-500 mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+          {isZh 
+            ? '本产品为独立开发的AI工具，不隶属于OpenAI、Anthropic或任何第三方AI服务提供商。' 
+            : 'This is an independent AI tool, not affiliated with OpenAI, Anthropic, or any third-party AI service providers.'
+          }{' '}
+          <Link 
+            href={`/${lang}/disclaimer`} 
+            className="text-purple-600 hover:underline"
+          >
+            {isZh ? '查看完整声明' : 'View full disclaimer'}
+          </Link>
+        </p>
       </div>
     </section>
   );
