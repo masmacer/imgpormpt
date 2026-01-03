@@ -27,7 +27,7 @@ export default function AboutPage() {
           <h2>What We Do</h2>
           <p>
             Our advanced AI technology analyzes your images and generates detailed, contextual prompts that 
-            can be used with various AI art generation tools like Stable Diffusion, Midjourney, DALL-E, 
+            can be used with various AI art generation tools like Stable Diffusion, Midjourney, Flux, 
             and more. Whether you're looking to:
           </p>
           <ul>

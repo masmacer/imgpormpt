@@ -46,7 +46,6 @@ export const metadata = {
     "AI prompt generator",
     "Stable Diffusion prompts",
     "Midjourney prompts",
-    "DALL-E prompts",
     "AI art prompts",
     "image analysis",
     "prompt engineering",

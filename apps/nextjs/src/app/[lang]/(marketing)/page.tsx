@@ -13,16 +13,16 @@ import ImageToPromptClient from "~/components/image-to-prompt-client";
 
 export const metadata: Metadata = {
   title: "Free Image to Prompt Generator - Transform Images into AI Prompts",
-  description: "Convert any image into detailed AI prompts with our free image to prompt generator. Perfect for Stable Diffusion, Midjourney, DALL-E, and other AI art tools. Upload your image and get instant, accurate prompts that capture style, composition, colors, and mood. Start creating better AI art today with our advanced image analysis technology!",
+  description: "Convert any image into detailed AI prompts with our free image to prompt generator. Perfect for Stable Diffusion, Midjourney, Flux, and other AI art tools. Upload your image and get instant, accurate prompts that capture style, composition, colors, and mood. Start creating better AI art today with our advanced image analysis technology!",
   keywords: [
     "image to prompt generator", "free image to prompt", "AI prompt generator", 
-    "Stable Diffusion prompts", "Midjourney prompts", "DALL-E prompts", 
+    "Stable Diffusion prompts", "Midjourney prompts", "Flux prompts", 
     "AI art prompts", "image analysis", "prompt engineering", "AI image generation",
     "reverse prompt", "image to text", "AI art generator", "prompt from image"
   ],
   openGraph: {
     title: "Free Image to Prompt Generator - Transform Images into AI Prompts",
-    description: "Convert any image into detailed AI prompts with our free image to prompt generator. Perfect for Stable Diffusion, Midjourney, DALL-E, and other AI art tools.",
+    description: "Convert any image into detailed AI prompts with our free image to prompt generator. Perfect for Stable Diffusion, Midjourney, Flux, and other AI art tools.",
     type: "website",
     url: "https://imagepromptgenerator.org",
     images: [
@@ -76,7 +76,7 @@ const features = [
   {
     icon: "🎨",
     title: "Multi-Model Support",
-    description: "Generate prompts optimized for Stable Diffusion, Midjourney, DALL-E, Flux, and other popular AI art generation platforms."
+    description: "Generate prompts optimized for Stable Diffusion, Midjourney, Flux, and other popular AI art generation platforms."
   }
 ];
 
@@ -93,14 +93,9 @@ const supportedModels = [
     popular: true
   },
   {
-    name: "DALL-E",
-    description: "Format prompts for OpenAI's DALL-E with natural language descriptions and style specifications.",
-    popular: true
-  },
-  {
     name: "Flux",
     description: "Specialized prompts for the latest Flux AI models with enhanced detail and accuracy.",
-    popular: false
+    popular: true
   }
 ];
 
@@ -128,7 +123,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "Image to Prompt Generator",
-  "description": "Free online tool to convert images into detailed AI prompts for Stable Diffusion, Midjourney, DALL-E, and other AI art generators.",
+  "description": "Free online tool to convert images into detailed AI prompts for Stable Diffusion, Midjourney, Flux, and other AI art generators.",
   "url": "https://imagepromptgenerator.org",
   "applicationCategory": "DesignApplication",
   "operatingSystem": "Web",
@@ -172,7 +167,7 @@ export default function IndexPage({
           </h1>
           
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl">
-            Transform any image into detailed AI prompts instantly. Our advanced image to prompt generator analyzes your images and creates professional prompts for Stable Diffusion, Midjourney, DALL-E, and other AI art tools. Start creating better AI art with precise, descriptive prompts that capture every detail.
+            Transform any image into detailed AI prompts instantly. Our advanced image to prompt generator analyzes your images and creates professional prompts for Stable Diffusion, Midjourney, Flux, and other AI art tools. Start creating better AI art with precise, descriptive prompts that capture every detail.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 mb-16">
@@ -292,7 +287,7 @@ export default function IndexPage({
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {supportedModels.map((model, index) => (
               <div
                 key={index}
@@ -366,7 +361,7 @@ export default function IndexPage({
                 What is an image to prompt generator?
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                An image to prompt generator is an AI-powered tool that analyzes images and creates detailed text descriptions (prompts) that can be used to generate similar images with AI art tools like Stable Diffusion, Midjourney, or DALL-E.
+                An image to prompt generator is an AI-powered tool that analyzes images and creates detailed text descriptions (prompts) that can be used to generate similar images with AI art tools like Stable Diffusion, Midjourney, or Flux.
               </p>
             </div>
             
@@ -384,7 +379,7 @@ export default function IndexPage({
                 Which AI art platforms work with generated prompts?
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Our generated prompts work with all major AI art platforms including Stable Diffusion, Midjourney, DALL-E, Flux, Leonardo AI, and many others. We optimize prompts for each platform's specific requirements.
+                Our generated prompts work with all major AI art platforms including Stable Diffusion, Midjourney, Flux, Leonardo AI, and many others. We optimize prompts for each platform's specific requirements.
               </p>
             </div>
             
