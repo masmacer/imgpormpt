@@ -138,9 +138,9 @@ export default async function PricingPage({ params: { lang } }: { params: { lang
             </p>
           </div>
           <div>
-            <h3 className="text-lg font-semibold mb-2">Is there an API available?</h3>
+            <h3 className="text-lg font-semibold mb-2">Do you offer refunds?</h3>
             <p className="text-gray-600 dark:text-gray-400">
-              Yes, our Enterprise plan includes full API access for seamless integration with your existing workflows.
+              We offer a 7-day money-back guarantee for all paid plans. Please review our refund policy for complete details.
             </p>
           </div>
         </div>
@@ -162,7 +162,7 @@ export default async function PricingPage({ params: { lang } }: { params: { lang
           {isZh ? '' : ' before making a purchase'}
         </p>
         
-        {/* Independent Product Disclaimer - 新添加 */}
+        {/* Independent Product Disclaimer */}
         <p className="text-xs text-gray-500 dark:text-gray-500 mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
           {isZh 
             ? '本产品为独立开发的AI工具，不隶属于OpenAI、Anthropic或任何第三方AI服务提供商。' 
