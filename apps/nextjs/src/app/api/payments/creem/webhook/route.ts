@@ -162,27 +162,23 @@ async function handleSubscriptionActive(data: any) {
   try {
     console.log('📅 Subscription activated');
     
-    const { metadata } = data;
+    const { metadata, subscription, id } = data;
     const userId = metadata?.user_id;
     const creditsAmount = parseInt(metadata?.credits_amount || '0');
     const planName = metadata?.plan_name;
+    const subscriptionId = subscription?.id || id;
 
-    if (!userId || !creditsAmount) {
-      console.error('Missing required data:', { userId, creditsAmount });
+    console.log('Subscription activation details:', { userId, creditsAmount, planName, subscriptionId });
+
+    if (!userId) {
+      console.error('Missing user ID');
       return;
     }
 
-    // 更新用户订阅状态
+    // 🔑 只更新订阅状态，不发放积分（由 subscription.paid 发放）
     await updateUserSubscription(userId, 'PRO');
     
-    // 发放首月积分
-    await CreditsService.addCredits(
-      userId, 
-      creditsAmount, 
-      `Subscription activated: ${planName}`
-    );
-    
-    console.log(`✅ Subscription activated for user ${userId}`);
+    console.log(`✅ User ${userId} upgraded to PRO, waiting for payment confirmation`);
 
   } catch (error) {
     console.error('Error handling subscription active:', error);
@@ -190,7 +186,7 @@ async function handleSubscriptionActive(data: any) {
   }
 }
 
-// ✅ 处理订阅支付成功
+// ✅ 处理订阅支付成功（首次 + 续费统一处理）
 async function handleSubscriptionPaid(data: any) {
   try {
     console.log('💰 Subscription paid');
@@ -201,33 +197,43 @@ async function handleSubscriptionPaid(data: any) {
     const planName = metadata?.plan_name;
     const subscriptionId = subscription?.id || id;
 
+    console.log('Payment details:', { userId, creditsAmount, planName, subscriptionId });
+
     if (!userId || !creditsAmount) {
       console.error('Missing required data:', { userId, creditsAmount });
       return;
     }
 
-    // 🔍 防重复：检查 10 分钟内是否已发放
-    const recentCredits = await db
-      .selectFrom('CreditUsage')  // ✅ 改为 CreditUsage
-      .select(['id'])
+    // 🔍 防重复：检查是否已经发放过积分
+    const existingCredit = await db
+      .selectFrom('CreditUsage')
+      .select(['id', 'description', 'createdAt'])
       .where('userId', '=', userId)
+      .where('action', '=', 'purchase')  // ✅ 只查 purchase 类型
       .where('description', 'like', `%${subscriptionId}%`)
-      .where('createdAt', '>', new Date(Date.now() - 10 * 60 * 1000))
+      .orderBy('createdAt', 'desc')
       .executeTakeFirst();
 
-    if (recentCredits) {
-      console.log(`⏭️  Credits already added for subscription ${subscriptionId}, skipping`);
-      return;
+    if (existingCredit) {
+      const timeDiff = Date.now() - existingCredit.createdAt.getTime();
+      // 如果 10 分钟内已发放，跳过
+      if (timeDiff < 10 * 60 * 1000) {
+        console.log(`⏭️  Credits already added for subscription ${subscriptionId} at ${existingCredit.createdAt}, skipping`);
+        return;
+      }
     }
 
-    // 发放订阅积分
+    // 确保用户是 PRO 状态
+    await updateUserSubscription(userId, 'PRO');
+
+    // 发放积分
     await CreditsService.addCredits(
       userId, 
       creditsAmount, 
       `Subscription payment: ${planName} (Sub: ${subscriptionId})`
     );
     
-    console.log(`✅ Credits added for user ${userId}`);
+    console.log(`✅ Added ${creditsAmount} credits to user ${userId} for subscription ${subscriptionId}`);
 
   } catch (error) {
     console.error('Error handling subscription paid:', error);
@@ -313,13 +319,17 @@ async function handleRefundCreated(data: any) {
 // 更新用户订阅状态
 async function updateUserSubscription(userId: string, plan: 'FREE' | 'PRO' | 'BUSINESS') {
   try {
+    console.log(`🔄 Updating subscription for user ${userId} to ${plan}`);
+    
     const existingCustomer = await db
       .selectFrom('Customer')
-      .select(['id'])
+      .select(['id', 'plan'])
       .where('authUserId', '=', userId)
       .executeTakeFirst();
 
     if (existingCustomer) {
+      console.log(`Found existing customer, current plan: ${existingCustomer.plan}`);
+      
       await db
         .updateTable('Customer')
         .set({
@@ -328,17 +338,24 @@ async function updateUserSubscription(userId: string, plan: 'FREE' | 'PRO' | 'BU
         })
         .where('authUserId', '=', userId)
         .execute();
+        
+      console.log(`✅ Updated user ${userId} from ${existingCustomer.plan} to ${plan}`);
     } else {
+      console.log(`No existing customer found, creating new record`);
+      
       await db
         .insertInto('Customer')
         .values({
           authUserId: userId,
           plan,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         })
         .execute();
+        
+      console.log(`✅ Created new customer record for user ${userId} with plan ${plan}`);
     }
 
-    console.log(`Updated user ${userId} to plan: ${plan}`);
   } catch (error) {
     console.error('Error updating user subscription:', error);
     throw error;
