@@ -14,6 +14,10 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
     const signature = request.headers.get('creem-signature') || request.headers.get('x-creem-signature');
     
+    console.log('🔔 Webhook received');
+    console.log('📝 Headers:', Object.fromEntries(request.headers.entries()));
+    console.log('📦 Raw body:', body);
+    
     // 验证 Webhook 签名
     const webhookSecret = process.env.CREEM_WEBHOOK_SECRET;
     if (!webhookSecret) {
@@ -29,14 +33,29 @@ export async function POST(request: NextRequest) {
 
     if (signature !== expectedSignature) {
       console.error('Invalid webhook signature');
+      console.error('Expected:', expectedSignature);
+      console.error('Received:', signature);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     const event = JSON.parse(body);
     
-    console.log('Creem webhook event:', event.type);
+    // 🔍 完整输出 webhook 数据
+    console.log('📦 Full webhook event:', JSON.stringify(event, null, 2));
+    console.log('📦 event.type:', event.type);
+    console.log('📦 event.event:', event.event);
+    console.log('📦 event.data:', JSON.stringify(event.data, null, 2));
+    
+    const eventType = event.type || event.event;
+    
+    if (!eventType) {
+      console.error('❌ No event type found');
+      return NextResponse.json({ error: 'No event type' }, { status: 400 });
+    }
 
-    switch (event.type) {
+    console.log('Creem webhook event:', eventType);
+
+    switch (eventType) {
       // ✅ 一次性支付完成 - 发放积分
       case 'checkout.completed':
         await handleCheckoutCompleted(event.data);
@@ -72,11 +91,11 @@ export async function POST(request: NextRequest) {
       case 'subscription.update':
       case 'subscription.trialing':
       case 'subscription.paused':
-        console.log(`Event logged but not processed: ${event.type}`);
+        console.log(`Event logged but not processed: ${eventType}`);
         break;
         
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`Unhandled event type: ${eventType}`);
     }
 
     return NextResponse.json({ received: true });
@@ -93,13 +112,15 @@ export async function POST(request: NextRequest) {
 // ✅ 处理一次性购买完成（积分包）
 async function handleCheckoutCompleted(data: any) {
   try {
-    console.log('💳 Checkout completed');
+    console.log('💳 Checkout completed, full data:', JSON.stringify(data, null, 2));
     
     const { customer, metadata, amount, currency } = data;
     const userId = metadata?.user_id;
     const productType = metadata?.product_type;
     const creditsAmount = parseInt(metadata?.credits_amount || '0');
     const planName = metadata?.plan_name;
+
+    console.log('Extracted values:', { userId, creditsAmount, productType, planName });
 
     if (!userId || !creditsAmount) {
       console.error('Missing required data:', { userId, creditsAmount });
