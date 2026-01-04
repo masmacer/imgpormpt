@@ -109,23 +109,44 @@ async function handleCheckoutCompleted(data: any) {
   try {
     console.log('💳 Checkout completed');
     
-    const { metadata } = data;
+    const { metadata, order } = data;
+    const productType = metadata?.product_type;
+    
+    // ⚠️ 订阅类型跳过（由 subscription.paid 处理）
+    if (productType === 'SUBSCRIPTION' || order?.type === 'subscription') {
+      console.log('⏭️  Skipping checkout.completed for subscription');
+      return;
+    }
+
     const userId = metadata?.user_id;
     const creditsAmount = parseInt(metadata?.credits_amount || '0');
     const planName = metadata?.plan_name;
-
-    console.log('Extracted values:', { userId, creditsAmount, planName });
 
     if (!userId || !creditsAmount) {
       console.error('Missing required data:', { userId, creditsAmount });
       return;
     }
 
-    // 发放积分
+    // 🔍 防重复：检查 10 分钟内是否已发放
+    const checkoutId = data.id;
+    const recentCredits = await db
+      .selectFrom('CreditUsage')  // ✅ 改为 CreditUsage
+      .select(['id'])
+      .where('userId', '=', userId)
+      .where('description', 'like', `%${checkoutId}%`)
+      .where('createdAt', '>', new Date(Date.now() - 10 * 60 * 1000))
+      .executeTakeFirst();
+
+    if (recentCredits) {
+      console.log(`⏭️  Credits already added for checkout ${checkoutId}, skipping`);
+      return;
+    }
+
+    // 只为一次性购买发放积分
     await CreditsService.addCredits(
       userId, 
       creditsAmount, 
-      `Purchased credits pack: ${planName}`
+      `Purchased credits pack: ${planName} (Checkout: ${checkoutId})`
     );
     
     console.log(`✅ Added ${creditsAmount} credits to user ${userId}`);
@@ -169,29 +190,44 @@ async function handleSubscriptionActive(data: any) {
   }
 }
 
-// ✅ 处理订阅续费成功
+// ✅ 处理订阅支付成功
 async function handleSubscriptionPaid(data: any) {
   try {
     console.log('💰 Subscription paid');
     
-    const { metadata } = data;
+    const { metadata, subscription, id } = data;
     const userId = metadata?.user_id;
     const creditsAmount = parseInt(metadata?.credits_amount || '0');
     const planName = metadata?.plan_name;
+    const subscriptionId = subscription?.id || id;
 
     if (!userId || !creditsAmount) {
       console.error('Missing required data:', { userId, creditsAmount });
       return;
     }
 
-    // 发放每月积分
+    // 🔍 防重复：检查 10 分钟内是否已发放
+    const recentCredits = await db
+      .selectFrom('CreditUsage')  // ✅ 改为 CreditUsage
+      .select(['id'])
+      .where('userId', '=', userId)
+      .where('description', 'like', `%${subscriptionId}%`)
+      .where('createdAt', '>', new Date(Date.now() - 10 * 60 * 1000))
+      .executeTakeFirst();
+
+    if (recentCredits) {
+      console.log(`⏭️  Credits already added for subscription ${subscriptionId}, skipping`);
+      return;
+    }
+
+    // 发放订阅积分
     await CreditsService.addCredits(
       userId, 
       creditsAmount, 
-      `Monthly subscription renewal: ${planName}`
+      `Subscription payment: ${planName} (Sub: ${subscriptionId})`
     );
     
-    console.log(`✅ Monthly credits added for user ${userId}`);
+    console.log(`✅ Credits added for user ${userId}`);
 
   } catch (error) {
     console.error('Error handling subscription paid:', error);
