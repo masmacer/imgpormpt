@@ -34,11 +34,11 @@ export async function POST(request: NextRequest) {
     const productConfig = CREEM_PRODUCTS[productType as ProductType];
 
     // 获取 Creem 配置
-    const creemSecretKey = process.env.CREEM_SECRET_KEY;
-    const environment = process.env.NEXT_PUBLIC_CREEM_ENVIRONMENT || 'sandbox';
+    const creemApiKey = process.env.CREEM_SECRET_KEY;
+    const environment = process.env.NEXT_PUBLIC_CREEM_ENVIRONMENT || 'test';
 
-    if (!creemSecretKey) {
-      console.error('Creem credentials not configured');
+    if (!creemApiKey) {
+      console.error('Creem API key not configured');
       return NextResponse.json(
         { error: 'Payment system not configured' },
         { status: 500 }
@@ -47,10 +47,12 @@ export async function POST(request: NextRequest) {
 
     // 根据 Creem API 文档的正确参数格式
     const checkoutData = {
-      product_id: productConfig.productId, // 使用配置中的 productId（环境变量）
+      product_id: productConfig.productId,
+      units: 1, // 数量
+      customer: {
+        email: user.email,
+      },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?plan=${planId}&type=${productType}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
-      customer_email: user.email || undefined,
       metadata: {
         user_id: user.id,
         plan_id: planId,
@@ -64,18 +66,19 @@ export async function POST(request: NextRequest) {
       product_id: productConfig.productId,
       environment,
       user_id: user.id,
+      user_email: user.email,
     });
 
     // 调用 Creem API 创建结账会话
-    // 注意：根据 Creem 文档，端点可能是 /checkout 而不是 /checkout-sessions
-    const apiUrl = environment === 'production' 
-      ? 'https://api.creem.io/v1/checkout'
-      : 'https://sandbox-api.creem.io/v1/checkout';
+    // 根据官方文档：POST /v1/checkouts
+    const apiUrl = environment === 'prod' 
+      ? 'https://api.creem.io/v1/checkouts'
+      : 'https://test-api.creem.io/v1/checkouts';
 
     const creemResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${creemSecretKey}`,
+        'x-api-key': creemApiKey,  // ✅ 使用 x-api-key 而不是 Authorization Bearer
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(checkoutData),
@@ -88,6 +91,7 @@ export async function POST(request: NextRequest) {
         status: creemResponse.status,
         statusText: creemResponse.statusText,
         body: responseText,
+        url: apiUrl,
       });
       
       return NextResponse.json(
@@ -101,9 +105,15 @@ export async function POST(request: NextRequest) {
 
     const session = JSON.parse(responseText);
 
+    console.log('Checkout session created:', {
+      id: session.id,
+      status: session.status,
+      checkout_url: session.checkout_url,
+    });
+
     return NextResponse.json({
-      checkoutUrl: session.url || session.checkout_url || session.redirect_url,
-      sessionId: session.id || session.session_id,
+      checkoutUrl: session.checkout_url,  // ✅ 根据文档是 checkout_url
+      sessionId: session.id,
     });
 
   } catch (error) {
