@@ -321,6 +321,9 @@ async function updateUserSubscription(userId: string, plan: 'FREE' | 'PRO' | 'BU
   try {
     console.log(`🔄 Updating subscription for user ${userId} to ${plan}`);
     
+    // 确定对应的 planId
+    const planId = plan === 'PRO' ? 'pro-plan' : plan === 'BUSINESS' ? 'business-plan' : 'free-plan';
+    
     const existingCustomer = await db
       .selectFrom('Customer')
       .select(['id', 'plan'])
@@ -339,7 +342,7 @@ async function updateUserSubscription(userId: string, plan: 'FREE' | 'PRO' | 'BU
         .where('authUserId', '=', userId)
         .execute();
         
-      console.log(`✅ Updated user ${userId} from ${existingCustomer.plan} to ${plan}`);
+      console.log(`✅ Updated Customer table: ${userId} from ${existingCustomer.plan} to ${plan}`);
     } else {
       console.log(`No existing customer found, creating new record`);
       
@@ -353,7 +356,31 @@ async function updateUserSubscription(userId: string, plan: 'FREE' | 'PRO' | 'BU
         })
         .execute();
         
-      console.log(`✅ Created new customer record for user ${userId} with plan ${plan}`);
+      console.log(`✅ Created new Customer record for user ${userId} with plan ${plan}`);
+    }
+
+    // 🔑 同时更新 UserCredits 表的 planId（关键！）
+    const existingUserCredits = await db
+      .selectFrom('UserCredits')
+      .select(['id', 'planId'])
+      .where('userId', '=', userId)
+      .executeTakeFirst();
+
+    if (existingUserCredits) {
+      console.log(`Found existing UserCredits, current planId: ${existingUserCredits.planId}`);
+      
+      await db
+        .updateTable('UserCredits')
+        .set({
+          planId,
+          updatedAt: new Date(),
+        })
+        .where('userId', '=', userId)
+        .execute();
+        
+      console.log(`✅ Updated UserCredits table: ${userId} planId from ${existingUserCredits.planId} to ${planId}`);
+    } else {
+      console.log(`⚠️  No UserCredits record found for user ${userId}, skipping planId update`);
     }
 
   } catch (error) {
