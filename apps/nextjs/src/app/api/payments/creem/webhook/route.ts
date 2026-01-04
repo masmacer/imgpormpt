@@ -15,8 +15,6 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('creem-signature') || request.headers.get('x-creem-signature');
     
     console.log('🔔 Webhook received');
-    console.log('📝 Headers:', Object.fromEntries(request.headers.entries()));
-    console.log('📦 Raw body:', body);
     
     // 验证 Webhook 签名
     const webhookSecret = process.env.CREEM_WEBHOOK_SECRET;
@@ -33,20 +31,17 @@ export async function POST(request: NextRequest) {
 
     if (signature !== expectedSignature) {
       console.error('Invalid webhook signature');
-      console.error('Expected:', expectedSignature);
-      console.error('Received:', signature);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     const event = JSON.parse(body);
     
-    // 🔍 完整输出 webhook 数据
-    console.log('📦 Full webhook event:', JSON.stringify(event, null, 2));
-    console.log('📦 event.type:', event.type);
-    console.log('📦 event.event:', event.event);
-    console.log('📦 event.data:', JSON.stringify(event.data, null, 2));
+    // ✅ Creem 使用 eventType 和 object 字段
+    const eventType = event.eventType;
+    const data = event.object;
     
-    const eventType = event.type || event.event;
+    console.log('📦 Event type:', eventType);
+    console.log('📦 Event data:', JSON.stringify(data, null, 2));
     
     if (!eventType) {
       console.error('❌ No event type found');
@@ -58,32 +53,32 @@ export async function POST(request: NextRequest) {
     switch (eventType) {
       // ✅ 一次性支付完成 - 发放积分
       case 'checkout.completed':
-        await handleCheckoutCompleted(event.data);
+        await handleCheckoutCompleted(data);
         break;
       
       // ✅ 订阅激活 - 首次订阅时发放积分
       case 'subscription.active':
-        await handleSubscriptionActive(event.data);
+        await handleSubscriptionActive(data);
         break;
       
       // ✅ 订阅续费成功 - 每月发放积分
       case 'subscription.paid':
-        await handleSubscriptionPaid(event.data);
+        await handleSubscriptionPaid(data);
         break;
         
       // ✅ 订阅取消 - 标记订阅状态
       case 'subscription.canceled':
-        await handleSubscriptionCanceled(event.data);
+        await handleSubscriptionCanceled(data);
         break;
       
       // ✅ 订阅过期 - 降级到免费版
       case 'subscription.expired':
-        await handleSubscriptionExpired(event.data);
+        await handleSubscriptionExpired(data);
         break;
       
       // ✅ 退款创建 - 扣除积分
       case 'refund.created':
-        await handleRefundCreated(event.data);
+        await handleRefundCreated(data);
         break;
       
       // ⚠️ 其他事件仅记录日志
@@ -112,15 +107,14 @@ export async function POST(request: NextRequest) {
 // ✅ 处理一次性购买完成（积分包）
 async function handleCheckoutCompleted(data: any) {
   try {
-    console.log('💳 Checkout completed, full data:', JSON.stringify(data, null, 2));
+    console.log('💳 Checkout completed');
     
-    const { customer, metadata, amount, currency } = data;
+    const { metadata } = data;
     const userId = metadata?.user_id;
-    const productType = metadata?.product_type;
     const creditsAmount = parseInt(metadata?.credits_amount || '0');
     const planName = metadata?.plan_name;
 
-    console.log('Extracted values:', { userId, creditsAmount, productType, planName });
+    console.log('Extracted values:', { userId, creditsAmount, planName });
 
     if (!userId || !creditsAmount) {
       console.error('Missing required data:', { userId, creditsAmount });
@@ -147,7 +141,7 @@ async function handleSubscriptionActive(data: any) {
   try {
     console.log('📅 Subscription activated');
     
-    const { customer, metadata, subscription } = data;
+    const { metadata } = data;
     const userId = metadata?.user_id;
     const creditsAmount = parseInt(metadata?.credits_amount || '0');
     const planName = metadata?.plan_name;
@@ -180,7 +174,7 @@ async function handleSubscriptionPaid(data: any) {
   try {
     console.log('💰 Subscription paid');
     
-    const { customer, metadata, subscription } = data;
+    const { metadata } = data;
     const userId = metadata?.user_id;
     const creditsAmount = parseInt(metadata?.credits_amount || '0');
     const planName = metadata?.plan_name;
@@ -210,7 +204,7 @@ async function handleSubscriptionCanceled(data: any) {
   try {
     console.log('🚫 Subscription canceled');
     
-    const { customer, metadata } = data;
+    const { metadata } = data;
     const userId = metadata?.user_id;
 
     if (!userId) {
@@ -218,8 +212,6 @@ async function handleSubscriptionCanceled(data: any) {
       return;
     }
 
-    // 订阅取消时保持 PRO，等到过期时才降级
-    // 不需要立即修改 plan，因为用户可以用到计费周期结束
     console.log(`✅ Subscription canceled for user ${userId}, will expire at billing period end`);
 
   } catch (error) {
@@ -233,7 +225,7 @@ async function handleSubscriptionExpired(data: any) {
   try {
     console.log('⏰ Subscription expired');
     
-    const { customer, metadata } = data;
+    const { metadata } = data;
     const userId = metadata?.user_id;
 
     if (!userId) {
@@ -257,7 +249,7 @@ async function handleRefundCreated(data: any) {
   try {
     console.log('💸 Refund created');
     
-    const { customer, metadata, amount } = data;
+    const { metadata } = data;
     const userId = metadata?.user_id;
     const creditsAmount = parseInt(metadata?.credits_amount || '0');
 
@@ -266,12 +258,12 @@ async function handleRefundCreated(data: any) {
       return;
     }
 
-    // 扣除退款对应的积分 - 修正参数顺序
+    // 扣除退款对应的积分
     await CreditsService.consumeCredits(
-      userId,           // ✅ 用户ID
-      'refund',         // ✅ action 类型
-      creditsAmount,    // ✅ 积分数量
-      `Refund processed` // ✅ 描述
+      userId,
+      'refund',
+      creditsAmount,
+      `Refund processed`
     );
     
     console.log(`✅ Deducted ${creditsAmount} credits from user ${userId} due to refund`);
