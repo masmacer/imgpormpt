@@ -6,6 +6,10 @@
     {
       "path": "/api/cleanup-sessions",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/health",
+      "schedule": "0 */6 * * *"
     }
   ]
 }
