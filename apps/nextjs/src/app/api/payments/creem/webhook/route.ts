@@ -5,6 +5,10 @@ import { db } from '@saasfly/db';
 import { CreditsService } from '~/lib/credits-service';
 import { CREEM_PRODUCTS, findProductByPriceId } from '~/config/products';
 
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
@@ -17,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
     }
 
-    // 验证签名（根据 Creem 的文档调整）
+    // 验证签名
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(body, 'utf8')
@@ -33,21 +37,42 @@ export async function POST(request: NextRequest) {
     console.log('Creem webhook event:', event.type);
 
     switch (event.type) {
-      case 'payment.completed':
-      case 'checkout.session.completed':
-        await handlePaymentSuccess(event.data);
+      // ✅ 一次性支付完成 - 发放积分
+      case 'checkout.completed':
+        await handleCheckoutCompleted(event.data);
+        break;
+      
+      // ✅ 订阅激活 - 首次订阅时发放积分
+      case 'subscription.active':
+        await handleSubscriptionActive(event.data);
+        break;
+      
+      // ✅ 订阅续费成功 - 每月发放积分
+      case 'subscription.paid':
+        await handleSubscriptionPaid(event.data);
         break;
         
-      case 'payment.failed':
-        await handlePaymentFailed(event.data);
+      // ✅ 订阅取消 - 标记订阅状态
+      case 'subscription.canceled':
+        await handleSubscriptionCanceled(event.data);
         break;
-        
-      case 'subscription.created':
-        await handleSubscriptionCreated(event.data);
+      
+      // ✅ 订阅过期 - 降级到免费版
+      case 'subscription.expired':
+        await handleSubscriptionExpired(event.data);
         break;
-        
-      case 'subscription.cancelled':
-        await handleSubscriptionCancelled(event.data);
+      
+      // ✅ 退款创建 - 扣除积分
+      case 'refund.created':
+        await handleRefundCreated(event.data);
+        break;
+      
+      // ⚠️ 其他事件仅记录日志
+      case 'dispute.created':
+      case 'subscription.update':
+      case 'subscription.trialing':
+      case 'subscription.paused':
+        console.log(`Event logged but not processed: ${event.type}`);
         break;
         
       default:
@@ -65,134 +90,180 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handlePaymentSuccess(data: any) {
+// ✅ 处理一次性购买完成（积分包）
+async function handleCheckoutCompleted(data: any) {
   try {
-    const { customer_email, metadata, amount, currency } = data;
+    console.log('💳 Checkout completed');
+    
+    const { customer, metadata, amount, currency } = data;
     const userId = metadata?.user_id;
-    const planId = metadata?.plan_id;
-    const planName = metadata?.plan_name;
     const productType = metadata?.product_type;
     const creditsAmount = parseInt(metadata?.credits_amount || '0');
+    const planName = metadata?.plan_name;
 
-    console.log('Payment successful:', {
-      userId,
-      email: customer_email,
-      planId,
-      planName,
-      productType,
-      creditsAmount,
-      amount,
-      currency,
-    });
-
-    if (!userId) {
-      console.error('No user ID in payment metadata');
+    if (!userId || !creditsAmount) {
+      console.error('Missing required data:', { userId, creditsAmount });
       return;
     }
 
-    // 根据产品类型处理不同的业务逻辑
-    if (productType === 'CREDITS') {
-      // 次数卡：直接增加积分
-      await CreditsService.addCredits(
-        userId, 
-        creditsAmount, 
-        `Purchased credits pack: ${planName}`
-      );
-      
-      console.log(`Added ${creditsAmount} credits to user ${userId}`);
-      
-    } else if (productType === 'SUBSCRIPTION') {
-      // 月订阅：更新用户订阅状态并分配积分
-      await updateUserSubscription(userId, planId);
-      await CreditsService.addCredits(
-        userId, 
-        creditsAmount, 
-        `Monthly subscription: ${planName}`
-      );
-      
-      console.log(`Updated subscription and added ${creditsAmount} credits for user ${userId}`);
+    // 发放积分
+    await CreditsService.addCredits(
+      userId, 
+      creditsAmount, 
+      `Purchased credits pack: ${planName}`
+    );
+    
+    console.log(`✅ Added ${creditsAmount} credits to user ${userId}`);
+
+  } catch (error) {
+    console.error('Error handling checkout completed:', error);
+    throw error;
+  }
+}
+
+// ✅ 处理订阅激活（首次订阅）
+async function handleSubscriptionActive(data: any) {
+  try {
+    console.log('📅 Subscription activated');
+    
+    const { customer, metadata, subscription } = data;
+    const userId = metadata?.user_id;
+    const creditsAmount = parseInt(metadata?.credits_amount || '0');
+    const planName = metadata?.plan_name;
+
+    if (!userId || !creditsAmount) {
+      console.error('Missing required data:', { userId, creditsAmount });
+      return;
     }
 
-    // 记录支付成功日志
-    await logPaymentSuccess(userId, planId, planName, amount, currency, productType);
+    // 更新用户订阅状态
+    await updateUserSubscription(userId, 'PRO');
+    
+    // 发放首月积分
+    await CreditsService.addCredits(
+      userId, 
+      creditsAmount, 
+      `Subscription activated: ${planName}`
+    );
+    
+    console.log(`✅ Subscription activated for user ${userId}`);
 
   } catch (error) {
-    console.error('Error handling payment success:', error);
+    console.error('Error handling subscription active:', error);
     throw error;
   }
 }
 
-async function handlePaymentFailed(data: any) {
+// ✅ 处理订阅续费成功
+async function handleSubscriptionPaid(data: any) {
   try {
-    const { customer_email, metadata, failure_reason } = data;
+    console.log('💰 Subscription paid');
     
-    console.log('Payment failed:', {
-      email: customer_email,
-      reason: failure_reason,
-      metadata,
-    });
+    const { customer, metadata, subscription } = data;
+    const userId = metadata?.user_id;
+    const creditsAmount = parseInt(metadata?.credits_amount || '0');
+    const planName = metadata?.plan_name;
 
-    // 处理支付失败的逻辑
-    // 例如：发送失败通知邮件
+    if (!userId || !creditsAmount) {
+      console.error('Missing required data:', { userId, creditsAmount });
+      return;
+    }
+
+    // 发放每月积分
+    await CreditsService.addCredits(
+      userId, 
+      creditsAmount, 
+      `Monthly subscription renewal: ${planName}`
+    );
+    
+    console.log(`✅ Monthly credits added for user ${userId}`);
 
   } catch (error) {
-    console.error('Error handling payment failure:', error);
+    console.error('Error handling subscription paid:', error);
     throw error;
   }
 }
 
-async function handleSubscriptionCreated(data: any) {
+// ✅ 处理订阅取消
+async function handleSubscriptionCanceled(data: any) {
   try {
-    const { customer_email, subscription_id, plan_id } = data;
+    console.log('🚫 Subscription canceled');
     
-    console.log('Subscription created:', {
-      email: customer_email,
-      subscriptionId: subscription_id,
-      planId: plan_id,
-    });
+    const { customer, metadata } = data;
+    const userId = metadata?.user_id;
 
-    // 处理订阅创建的逻辑
+    if (!userId) {
+      console.error('Missing user ID');
+      return;
+    }
+
+    // 订阅取消时保持 PRO，等到过期时才降级
+    // 不需要立即修改 plan，因为用户可以用到计费周期结束
+    console.log(`✅ Subscription canceled for user ${userId}, will expire at billing period end`);
 
   } catch (error) {
-    console.error('Error handling subscription creation:', error);
+    console.error('Error handling subscription canceled:', error);
     throw error;
   }
 }
 
-async function handleSubscriptionCancelled(data: any) {
+// ✅ 处理订阅过期
+async function handleSubscriptionExpired(data: any) {
   try {
-    const { customer_email, subscription_id } = data;
+    console.log('⏰ Subscription expired');
     
-    console.log('Subscription cancelled:', {
-      email: customer_email,
-      subscriptionId: subscription_id,
-    });
+    const { customer, metadata } = data;
+    const userId = metadata?.user_id;
 
-    // 处理订阅取消的逻辑
-    // 例如：将用户降级到免费计划
+    if (!userId) {
+      console.error('Missing user ID');
+      return;
+    }
+
+    // 降级到免费版
+    await updateUserSubscription(userId, 'FREE');
+    
+    console.log(`✅ User ${userId} downgraded to FREE plan`);
 
   } catch (error) {
-    console.error('Error handling subscription cancellation:', error);
+    console.error('Error handling subscription expired:', error);
+    throw error;
+  }
+}
+
+// ✅ 处理退款
+async function handleRefundCreated(data: any) {
+  try {
+    console.log('💸 Refund created');
+    
+    const { customer, metadata, amount } = data;
+    const userId = metadata?.user_id;
+    const creditsAmount = parseInt(metadata?.credits_amount || '0');
+
+    if (!userId || !creditsAmount) {
+      console.error('Missing required data:', { userId, creditsAmount });
+      return;
+    }
+
+    // 扣除退款对应的积分 - 修正参数顺序
+    await CreditsService.consumeCredits(
+      userId,           // ✅ 用户ID
+      'refund',         // ✅ action 类型
+      creditsAmount,    // ✅ 积分数量
+      `Refund processed` // ✅ 描述
+    );
+    
+    console.log(`✅ Deducted ${creditsAmount} credits from user ${userId} due to refund`);
+
+  } catch (error) {
+    console.error('Error handling refund:', error);
     throw error;
   }
 }
 
 // 更新用户订阅状态
-async function updateUserSubscription(userId: string, planId: string) {
+async function updateUserSubscription(userId: string, plan: 'FREE' | 'PRO' | 'BUSINESS') {
   try {
-    // 查找用户
-    const user = await db
-      .selectFrom('User')
-      .select(['id'])
-      .where('id', '=', userId)
-      .executeTakeFirst();
-
-    if (!user) {
-      console.error(`User not found: ${userId}`);
-      return;
-    }
-
-    // 更新或创建 Customer 记录
     const existingCustomer = await db
       .selectFrom('Customer')
       .select(['id'])
@@ -200,59 +271,27 @@ async function updateUserSubscription(userId: string, planId: string) {
       .executeTakeFirst();
 
     if (existingCustomer) {
-      // 更新现有客户
       await db
         .updateTable('Customer')
         .set({
-          plan: 'PRO', // 专业版
+          plan,
           updatedAt: new Date(),
         })
         .where('authUserId', '=', userId)
         .execute();
     } else {
-      // 创建新客户记录
       await db
         .insertInto('Customer')
         .values({
           authUserId: userId,
-          plan: 'PRO',
+          plan,
         })
         .execute();
     }
 
-    console.log(`Updated subscription for user ${userId} to PRO plan`);
+    console.log(`Updated user ${userId} to plan: ${plan}`);
   } catch (error) {
     console.error('Error updating user subscription:', error);
     throw error;
-  }
-}
-
-// 记录支付成功日志
-async function logPaymentSuccess(
-  userId: string,
-  planId: string,
-  planName: string,
-  amount: number,
-  currency: string,
-  productType: string
-) {
-  try {
-    // 记录到积分使用历史（负数表示充值）
-    await db
-      .insertInto('CreditUsage')
-      .values({
-        id: randomUUID(),
-        userId,
-        action: 'payment_success',
-        creditsUsed: -Math.round(amount / 100), // 负数表示增加，这里简化为美分转美元
-        description: `Payment successful: ${planName} (${productType})`,
-        createdAt: new Date(),
-      })
-      .execute();
-
-    console.log(`Logged payment success for user ${userId}: ${planName}`);
-  } catch (error) {
-    console.error('Error logging payment success:', error);
-    // 不抛出错误，避免影响主要的支付处理流程
   }
 }
