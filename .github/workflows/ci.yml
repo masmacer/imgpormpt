@@ -1,11 +1,15 @@
 name: CI
 
-on:
-  pull_request:
-    branches: [ "*" ]
-  push:
-    branches: [ "main" ]
-  merge_group:
+# ✅ 改为手动触发，不自动运行
+on: workflow_dispatch
+
+# 注释掉自动触发
+# on:
+#   pull_request:
+#     branches: [ "*" ]
+#   push:
+#     branches: [ "main" ]
+#   merge_group:
 
 jobs:
   build-lint:
