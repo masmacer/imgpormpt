@@ -43,9 +43,9 @@ jobs:
       - name: Generate Prisma types
         run: cd packages/db && bun prisma generate
 
-      # ✅ 简化构建：只构建 Next.js
-      - name: Build Next.js
-        run: cd apps/nextjs && bun with-env next build
+      # ✅ 使用完整的 build 命令（包含 contentlayer）
+      - name: Build
+        run: cd apps/nextjs && bun run build
         env:
           POSTGRES_HOST: postgres
           POSTGRES_PORT: 5432
@@ -55,5 +55,5 @@ jobs:
           POSTGRES_URL: postgres://default:default@localhost:5432/verceldb
           SKIP_ENV_VALIDATION: true
 
-      - name: Typecheck
+      - name: Lint
         run: cd apps/nextjs && bun with-env next lint
