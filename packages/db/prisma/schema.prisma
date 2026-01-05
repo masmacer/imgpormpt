@@ -122,6 +122,10 @@ model UserCredits {
   usedCredits      Int      @default(0)
   availableCredits Int      @default(0)
   planId           String?
+  
+  dailyUsedCount   Int      @default(0)
+  dailyResetDate   DateTime @default(now())
+
   lastResetDate    DateTime @default(now())
   createdAt        DateTime @default(now())
   updatedAt        DateTime @default(now())

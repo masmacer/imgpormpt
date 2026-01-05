@@ -22,53 +22,22 @@ export interface CreditUsageRecord {
 
 export class CreditsService {
   /**
-   * 获取用户积分余额
+   * 获取用户积分余额（优化版：使用缓存字段）
    */
   static async getUserCredits(userId: string): Promise<CreditBalance | null> {
     try {
-      // 获取用户积分信息
-      let userCredits = await db
+      const userCredits = await db
         .selectFrom("UserCredits")
         .selectAll()
         .where("userId", "=", userId)
         .executeTakeFirst();
 
       if (!userCredits) {
-        // 如果用户没有积分记录，初始化
-        console.log(`Initializing credits for new user: ${userId}`);
         await this.initializeUserCredits(userId);
-        
-        // 重新获取，如果还是失败就返回默认值
-        userCredits = await db
-          .selectFrom("UserCredits")
-          .selectAll()
-          .where("userId", "=", userId)
-          .executeTakeFirst();
-        
-        if (!userCredits) {
-          console.error(`Failed to initialize credits for user: ${userId}`);
-          // 返回默认的积分信息而不是null
-          return {
-            totalCredits: 300,
-            usedCredits: 0,
-            availableCredits: 300,
-            dailyLimit: 10,
-            dailyUsed: 0,
-            dailyRemaining: 10,
-            planName: "Free Plan"
-          };
-        }
+        return this.getUserCredits(userId);
       }
 
-      // 获取用户积分计划，默认为免费计划
-      let planId = "free-plan";
-      
-      // 尝试从UserCredits表获取planId
-      if (userCredits.planId) {
-        planId = userCredits.planId;
-      }
-      
-      // 获取计划的积分配置
+      const planId = userCredits.planId || "free-plan";
       const creditPlan = await db
         .selectFrom("CreditPlans")
         .selectAll()
@@ -79,18 +48,30 @@ export class CreditsService {
         throw new Error(`Credit plan not found: ${planId}`);
       }
 
-      // 计算今日已使用积分
+      // ✅ 检查是否需要重置每日计数器
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
-      const dailyUsage = await db
-        .selectFrom("CreditUsage")
-        .select((eb) => [eb.fn.sum("creditsUsed").as("total")])
-        .where("userId", "=", userId)
-        .where("createdAt", ">=", today)
-        .executeTakeFirst();
+      const lastReset = new Date(userCredits.dailyResetDate);
+      lastReset.setHours(0, 0, 0, 0);
 
-      const dailyUsed = Number(dailyUsage?.total || 0);
+      let dailyUsed = userCredits.dailyUsedCount;
+
+      if (today > lastReset) {
+        // 新的一天，重置计数器
+        await db
+          .updateTable("UserCredits")
+          .set({
+            dailyUsedCount: 0,
+            dailyResetDate: today,
+          })
+          .where("userId", "=", userId)
+          .execute();
+        
+        dailyUsed = 0;
+        console.log(`✅ Daily counter reset for user ${userId}`);
+      }
+
+      // ✅ 直接使用缓存的每日使用量，无需查询 CreditUsage 表
       const dailyRemaining = creditPlan.dailyCredits > 0 
         ? Math.max(0, creditPlan.dailyCredits - dailyUsed)
         : userCredits.availableCredits;
@@ -128,7 +109,7 @@ export class CreditsService {
   }
 
   /**
-   * 消费积分
+   * 消费积分（优化版：同时更新缓存）
    */
   static async consumeCredits(
     userId: string, 
@@ -137,26 +118,26 @@ export class CreditsService {
     description?: string
   ): Promise<boolean> {
     try {
-      // 检查是否有足够积分
       const hasCredits = await this.hasEnoughCredits(userId, creditsUsed);
       if (!hasCredits) {
+        console.log(`❌ Insufficient credits for user ${userId}`);
         return false;
       }
 
-      // 开始事务
       await db.transaction().execute(async (trx) => {
-        // 更新用户积分
+        // ✅ 同时更新三个字段
         await trx
           .updateTable("UserCredits")
           .set((eb) => ({
             usedCredits: eb("usedCredits", "+", creditsUsed),
             availableCredits: eb("availableCredits", "-", creditsUsed),
+            dailyUsedCount: eb("dailyUsedCount", "+", creditsUsed),  // ✅ 同步更新每日计数
             updatedAt: new Date()
           }))
           .where("userId", "=", userId)
           .execute();
 
-        // 记录使用历史
+        // 记录使用历史（仅用于展示）
         await trx
           .insertInto("CreditUsage")
           .values({
@@ -170,6 +151,7 @@ export class CreditsService {
           .execute();
       });
 
+      console.log(`✅ Consumed ${creditsUsed} credits for user ${userId} (action: ${action})`);
       return true;
 
     } catch (error) {
@@ -179,33 +161,42 @@ export class CreditsService {
   }
 
   /**
-   * 添加积分
+   * 增加积分（支持自定义 action）
    */
-  static async addCredits(userId: string, creditsToAdd: number, description?: string): Promise<boolean> {
+  static async addCredits(
+    userId: string, 
+    creditsToAdd: number, 
+    description?: string,
+    action: string = 'credit_added'  // ✅ 支持自定义 action
+  ): Promise<boolean> {
     try {
-      await db
-        .updateTable("UserCredits")
-        .set((eb) => ({
-          totalCredits: eb("totalCredits", "+", creditsToAdd),
-          availableCredits: eb("availableCredits", "+", creditsToAdd),
-          updatedAt: new Date()
-        }))
-        .where("userId", "=", userId)
-        .execute();
+      await db.transaction().execute(async (trx) => {
+        // 更新用户积分
+        await trx
+          .updateTable("UserCredits")
+          .set((eb) => ({
+            totalCredits: eb("totalCredits", "+", creditsToAdd),
+            availableCredits: eb("availableCredits", "+", creditsToAdd),
+            updatedAt: new Date()
+          }))
+          .where("userId", "=", userId)
+          .execute();
 
-      // 记录积分添加历史
-      await db
-        .insertInto("CreditUsage")
-        .values({
-          id: randomUUID(),
-          userId,
-          action: "credit_added",
-          creditsUsed: -creditsToAdd, // 负数表示添加
-          description: description || "Credits added",
-          createdAt: new Date()
-        })
-        .execute();
+        // 记录历史（负数表示增加）
+        await trx
+          .insertInto("CreditUsage")
+          .values({
+            id: randomUUID(),
+            userId,
+            action,  // ✅ 使用传入的 action
+            creditsUsed: -creditsToAdd,  // 负数表示增加
+            description,
+            createdAt: new Date()
+          })
+          .execute();
+      });
 
+      console.log(`✅ Added ${creditsToAdd} credits to user ${userId}`);
       return true;
 
     } catch (error) {
@@ -215,7 +206,7 @@ export class CreditsService {
   }
 
   /**
-   * 获取用户使用历史
+   * 获取用户使用历史（仅展示，不用于计算）
    */
   static async getUserUsageHistory(
     userId: string, 
@@ -247,11 +238,26 @@ export class CreditsService {
   }
 
   /**
+   * 获取当前用户积分
+   */
+  static async getCurrentUserCredits(): Promise<CreditBalance | null> {
+    try {
+      const user = await getCurrentUser();
+      if (!user?.id) {
+        return null;
+      }
+      return this.getUserCredits(user.id);
+    } catch (error) {
+      console.error("Error getting current user credits:", error);
+      return null;
+    }
+  }
+
+  /**
    * 初始化用户积分
    */
   private static async initializeUserCredits(userId: string): Promise<void> {
     try {
-      // 检查用户是否已有积分记录（避免重复创建）
       const existing = await db
         .selectFrom("UserCredits")
         .select(["id"])
@@ -263,7 +269,6 @@ export class CreditsService {
         return;
       }
 
-      // 验证用户是否存在
       const userExists = await db
         .selectFrom("User")
         .select(["id"])
@@ -275,19 +280,16 @@ export class CreditsService {
         throw new Error(`User ${userId} not found`);
       }
 
-      // 默认使用免费计划
       const planId = "free-plan";
-      
-      // 获取计划的积分配置
       const creditPlan = await db
         .selectFrom("CreditPlans")
         .selectAll()
         .where("id", "=", planId)
         .executeTakeFirst();
 
-      const initialCredits = creditPlan?.monthlyCredits || 300; // 默认300积分
+      const initialCredits = creditPlan?.monthlyCredits || 300;
 
-      // 创建用户积分记录
+      // ✅ 包含新字段
       await db
         .insertInto("UserCredits")
         .values({
@@ -297,37 +299,18 @@ export class CreditsService {
           usedCredits: 0,
           availableCredits: initialCredits,
           planId: planId,
+          dailyUsedCount: 0,        // ✅ 初始化
+          dailyResetDate: new Date(), // ✅ 初始化
           lastResetDate: new Date(),
           createdAt: new Date(),
           updatedAt: new Date()
         })
         .execute();
 
-      console.log(`Successfully initialized credits for user ${userId}`);
+      console.log(`✅ Successfully initialized credits for user ${userId}`);
 
     } catch (error) {
-      console.error(`Error initializing user credits for ${userId}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * 重置月度积分（用于定时任务）
-   */
-  static async resetMonthlyCredits(): Promise<void> {
-    try {
-      // 获取所有需要重置的用户
-      const users = await db
-        .selectFrom("UserCredits")
-        .select(["userId"])
-        .execute();
-
-      for (const user of users) {
-        await this.initializeUserCredits(user.userId);
-      }
-
-    } catch (error) {
-      console.error("Error resetting monthly credits:", error);
+      console.error("Error initializing user credits:", error);
       throw error;
     }
   }

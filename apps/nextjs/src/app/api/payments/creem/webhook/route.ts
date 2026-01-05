@@ -146,7 +146,8 @@ async function handleCheckoutCompleted(data: any) {
     await CreditsService.addCredits(
       userId, 
       creditsAmount, 
-      `Purchased credits pack: ${planName} (Checkout: ${checkoutId})`
+      `Purchased credits pack: ${planName} (Checkout: ${checkoutId})`,
+      'purchase'  // ✅ 添加这个
     );
     
     console.log(`✅ Added ${creditsAmount} credits to user ${userId}`);
@@ -230,7 +231,8 @@ async function handleSubscriptionPaid(data: any) {
     await CreditsService.addCredits(
       userId, 
       creditsAmount, 
-      `Subscription payment: ${planName} (Sub: ${subscriptionId})`
+      `Subscription payment: ${planName} (Sub: ${subscriptionId})`,
+      'purchase'  // ✅ 添加这个
     );
     
     console.log(`✅ Added ${creditsAmount} credits to user ${userId} for subscription ${subscriptionId}`);

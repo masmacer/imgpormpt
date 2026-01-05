@@ -83,6 +83,8 @@ export type UserCredits = {
   usedCredits: Generated<number>;
   availableCredits: Generated<number>;
   planId: string | null;
+  dailyUsedCount: Generated<number>;
+  dailyResetDate: Generated<Timestamp>;
   lastResetDate: Generated<Timestamp>;
   createdAt: Generated<Timestamp>;
   updatedAt: Generated<Timestamp>;
