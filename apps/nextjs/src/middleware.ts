@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip all internal paths (_next), API routes, static files, and HTML files  
-    "/((?!_next|api|favicon.ico|logo.svg|.*\\.html).*)",
+    "/((?!_next|api|favicon.ico|logo.svg|logo.webp|.*\\.html).*)",
     // Optional: only run on root (/) URL
     // '/'
   ]
