@@ -24,10 +24,10 @@ export const SignInModal = ({ dict }: { dict: Record<string, string> }) => {
           <a href={siteConfig.url}>
             <Image
               src="/logo.webp"
-              className="mx-auto"
-              width="64"
-              height="64"
+              width={64}
+              height={64}
               alt="Logo"
+              className="mx-auto"
             />
           </a>
           <h3 className="font-urban text-2xl font-bold">{dict.signup}</h3>
