@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 import { Button } from "@saasfly/ui/button";
@@ -13,6 +14,7 @@ import { useSigninModal } from "~/hooks/use-signin-modal";
 
 export const SignInModal = ({ dict }: { dict: Record<string, string> }) => {
   const signInModal = useSigninModal();
+  const router = useRouter();
   const [signInClicked, setSignInClicked] = useState(false);
 
   return (
@@ -21,11 +23,11 @@ export const SignInModal = ({ dict }: { dict: Record<string, string> }) => {
         <div className="flex flex-col items-center justify-center space-y-3 border-b border-neutral-200 dark:border-neutral-800 bg-background px-4 py-6 pt-8 text-center md:px-16">
           <a href={siteConfig.url}>
             <Image
-              src="/images/avatars/saasfly-logo.svg"
+              src="/logo.webp"
               className="mx-auto"
               width="64"
               height="64"
-              alt=""
+              alt="Logo"
             />
           </a>
           <h3 className="font-urban text-2xl font-bold">{dict.signup}</h3>
@@ -38,23 +40,25 @@ export const SignInModal = ({ dict }: { dict: Record<string, string> }) => {
             disabled={signInClicked}
             onClick={() => {
               setSignInClicked(true);
-              signIn("github", { redirect: false })
-                .then(() =>
+              signIn("google", { redirect: false })
+                .then(() => {
                   setTimeout(() => {
                     signInModal.onClose();
-                  }, 1000),
-                )
+                    router.refresh();
+                  }, 1000);
+                })
                 .catch((error) => {
-                  console.error("signUp failed:", error);
+                  console.error("signIn failed:", error);
+                  setSignInClicked(false);
                 });
             }}
           >
             {signInClicked ? (
               <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Icons.GitHub className="mr-2 h-4 w-4" />
+              <Icons.Google className="mr-2 h-4 w-4" />
             )}{" "}
-            {dict.signup_github}
+            {dict.signup_google || "Sign Up with Google"}
           </Button>
         </div>
       </div>
