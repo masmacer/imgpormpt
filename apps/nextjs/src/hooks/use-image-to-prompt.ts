@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { toast } from "@saasfly/ui/use-toast";
+import { useSigninModal } from "~/hooks/use-signin-modal";
 
 interface UseImageToPromptOptions {
   onSuccess?: (prompt: string) => void;
@@ -24,6 +25,36 @@ export function useImageToPrompt(options: UseImageToPromptOptions = {}): UseImag
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
+  const signInModal = useSigninModal();
+
+  const handleError = useCallback((err: any, response?: Response) => {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+    setError(errorMessage);
+    options.onError?.(errorMessage);
+    
+    // ✅ Show login modal when authentication is required
+    if (response?.status === 401) {
+      signInModal.onOpen();
+      toast({
+        title: "Login Required",
+        description: "Please sign in to use the image-to-prompt feature",
+        variant: "default",
+      });
+    } else if (response?.status === 402) {
+      // Insufficient credits
+      toast({
+        title: "Insufficient Credits",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  }, [options, signInModal]);
 
   const generatePrompt = useCallback(async (
     file: File,
@@ -36,13 +67,15 @@ export function useImageToPrompt(options: UseImageToPromptOptions = {}): UseImag
     setError(null);
     setResult(null);
 
+    let response: Response | undefined;
+
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("model", requestOptions.model || "General Image Prompt");
       formData.append("language", requestOptions.language || "en");
 
-      const response = await fetch("/api/image-to-prompt", {
+      response = await fetch("/api/image-to-prompt", {
         method: "POST",
         body: formData,
       });
@@ -66,19 +99,11 @@ export function useImageToPrompt(options: UseImageToPromptOptions = {}): UseImag
       }
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-      setError(errorMessage);
-      options.onError?.(errorMessage);
-      
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      handleError(err, response);
     } finally {
       setIsLoading(false);
     }
-  }, [options]);
+  }, [options, handleError]);
 
   const generatePromptFromUrl = useCallback(async (
     imageUrl: string,
@@ -91,8 +116,10 @@ export function useImageToPrompt(options: UseImageToPromptOptions = {}): UseImag
     setError(null);
     setResult(null);
 
+    let response: Response | undefined;
+
     try {
-      const response = await fetch("/api/image-to-prompt", {
+      response = await fetch("/api/image-to-prompt", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
@@ -123,25 +150,17 @@ export function useImageToPrompt(options: UseImageToPromptOptions = {}): UseImag
       }
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-      setError(errorMessage);
-      options.onError?.(errorMessage);
-      
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      handleError(err, response);
     } finally {
       setIsLoading(false);
     }
-  }, [options]);
+  }, [options, handleError]);
 
   return {
     generatePrompt,
     generatePromptFromUrl,
     isLoading,
     error,
-    result,
+    result
   };
 }

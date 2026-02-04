@@ -34,7 +34,7 @@ export function UserAuthForm({
         onClick={() => {
           setIsGoogleLoading(true);
           signIn("google", {
-            callbackUrl: searchParams?.get("from") ?? `/${lang}/dashboard`,
+            callbackUrl: searchParams?.get("from") ?? `/${lang}`,
           }).catch((error) => {
             console.error("Google signIn error:", error);
           });
