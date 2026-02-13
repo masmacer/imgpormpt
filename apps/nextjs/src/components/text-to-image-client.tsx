@@ -19,15 +19,14 @@ export default function TextToImageClient() {
   const searchParams = useSearchParams();
   const [prompt, setPrompt] = useState("");
   const [selectedSize, setSelectedSize] = useState("1:1");
-  const [isEnhance, setIsEnhance] = useState(false);
-  const [referenceImageUrl, setReferenceImageUrl] = useState("");
-  const [useReference, setUseReference] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
 
   const { generateImage, isLoading, error } = useTextToImage({
     onSuccess: (result) => {
-      setGeneratedImageUrl(result.imageUrl);
+      if (result.imageUrl) {
+        setGeneratedImageUrl(result.imageUrl);
+      }
       setTaskId(result.taskId);
     }
   });
@@ -47,8 +46,6 @@ export default function TextToImageClient() {
 
     await generateImage(prompt, {
       size: selectedSize,
-      isEnhance: isEnhance,
-      referenceImageUrl: useReference ? referenceImageUrl : undefined,
     });
   };
 
@@ -60,10 +57,8 @@ export default function TextToImageClient() {
 
   const handleClear = () => {
     setPrompt("");
-    setReferenceImageUrl("");
     setGeneratedImageUrl(null);
     setTaskId(null);
-    setUseReference(false);
   };
 
   return (
@@ -128,54 +123,6 @@ export default function TextToImageClient() {
                       </div>
                     </label>
                   ))}
-                </div>
-              </div>
-
-              {/* Enhance Option */}
-              <div className="flex items-start gap-3 p-4 border rounded-lg">
-                <input
-                  type="checkbox"
-                  id="enhance"
-                  checked={isEnhance}
-                  onChange={(e) => setIsEnhance(e.target.checked)}
-                  className="mt-1"
-                />
-                <div>
-                  <label htmlFor="enhance" className="font-medium text-sm cursor-pointer">
-                    ✨ Enhance Prompt
-                  </label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Automatically improve your prompt for better quality results
-                  </p>
-                </div>
-              </div>
-
-              {/* Reference Image Toggle */}
-              <div className="flex items-start gap-3 p-4 border rounded-lg">
-                <input
-                  type="checkbox"
-                  id="useReference"
-                  checked={useReference}
-                  onChange={(e) => setUseReference(e.target.checked)}
-                  className="mt-1"
-                />
-                <div className="flex-1">
-                  <label htmlFor="useReference" className="font-medium text-sm cursor-pointer">
-                    🖼️ Use Reference Image (Optional)
-                  </label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Add a reference image URL to guide the generation
-                  </p>
-                  
-                  {useReference && (
-                    <input
-                      type="url"
-                      value={referenceImageUrl}
-                      onChange={(e) => setReferenceImageUrl(e.target.value)}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full mt-3 px-3 py-2 border border-input rounded-md bg-background text-sm"
-                    />
-                  )}
                 </div>
               </div>
 

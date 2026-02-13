@@ -1,17 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@saasfly/ui/use-toast";
 import { useSigninModal } from "~/hooks/use-signin-modal";
 
 interface TextToImageOptions {
   size?: string;
-  isEnhance?: boolean;
-  referenceImageUrl?: string;
 }
 
 interface TextToImageResult {
-  imageUrl: string;
+  imageUrl?: string;
   taskId: string;
   status: string;
 }
@@ -25,6 +23,53 @@ export function useTextToImage(options?: {
   const [result, setResult] = useState<TextToImageResult | null>(null);
   const { toast } = useToast();
   const signInModal = useSigninModal();
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 轮询检查任务状态
+  const pollTaskStatus = async (taskId: string) => {
+    let attempts = 0;
+    const maxAttempts = 60; // 2分钟（每2秒一次）
+    
+    return new Promise<TextToImageResult>((resolve, reject) => {
+      pollIntervalRef.current = setInterval(async () => {
+        attempts++;
+        console.log(`轮询状态 ${attempts}/${maxAttempts}...`);
+
+        try {
+          const response = await fetch(`/api/text-to-image/status?taskId=${taskId}`);
+          const data = await response.json();
+
+          if (!response.ok) {
+            clearInterval(pollIntervalRef.current!);
+            reject(new Error(data.error || "Failed to check task status"));
+            return;
+          }
+
+          const taskStatus = data.data?.status;
+          console.log('任务状态:', taskStatus);
+
+          if (taskStatus === 'SUCCESS') {
+            clearInterval(pollIntervalRef.current!);
+            const imageResult: TextToImageResult = {
+              imageUrl: data.data.imageUrl,
+              taskId: taskId,
+              status: 'SUCCESS',
+            };
+            resolve(imageResult);
+          } else if (taskStatus === 'FAILED') {
+            clearInterval(pollIntervalRef.current!);
+            reject(new Error(data.data?.errorMessage || '图片生成失败'));
+          } else if (attempts >= maxAttempts) {
+            clearInterval(pollIntervalRef.current!);
+            reject(new Error('图片生成超时，请稍后重试'));
+          }
+        } catch (err) {
+          clearInterval(pollIntervalRef.current!);
+          reject(err);
+        }
+      }, 2000); // 每2秒轮询一次
+    });
+  };
 
   const generateImage = async (
     prompt: string,
@@ -46,6 +91,7 @@ export function useTextToImage(options?: {
     setResult(null);
 
     try {
+      // 步骤1: 创建生成任务
       const response = await fetch("/api/text-to-image", {
         method: "POST",
         headers: {
@@ -54,8 +100,6 @@ export function useTextToImage(options?: {
         body: JSON.stringify({
           prompt: prompt.trim(),
           size: generateOptions?.size || "1:1",
-          isEnhance: generateOptions?.isEnhance || false,
-          referenceImageUrl: generateOptions?.referenceImageUrl || null,
         }),
       });
 
@@ -86,11 +130,11 @@ export function useTextToImage(options?: {
         throw new Error(data.error || "Failed to generate image");
       }
 
-      const imageResult: TextToImageResult = {
-        imageUrl: data.data.imageUrl,
-        taskId: data.data.taskId,
-        status: data.data.status,
-      };
+      const taskId = data.data.taskId;
+      console.log('任务已创建:', taskId);
+
+      // 步骤2: 轮询任务状态，直到完成
+      const imageResult = await pollTaskStatus(taskId);
 
       setResult(imageResult);
       
@@ -124,6 +168,9 @@ export function useTextToImage(options?: {
       throw err;
     } finally {
       setIsLoading(false);
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
     }
   };
 

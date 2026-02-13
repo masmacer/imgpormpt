@@ -1,6 +1,6 @@
 import type { ColumnType } from "kysely";
 
-import type { Status, SubscriptionPlan } from "./enums";
+import type { ImageTaskStatus, Status, SubscriptionPlan } from "./enums";
 
 export type Generated<T> =
   T extends ColumnType<infer S, infer I, infer U>
@@ -51,6 +51,19 @@ export type Customer = {
   createdAt: Generated<Timestamp>;
   updatedAt: Generated<Timestamp>;
 };
+export type ImageGenerationTask = {
+  id: Generated<string>;
+  userId: string;
+  taskId: string;
+  prompt: string;
+  size: string;
+  status: Generated<ImageTaskStatus>;
+  imageUrl: string | null;
+  errorMessage: string | null;
+  createdAt: Generated<Timestamp>;
+  updatedAt: Generated<Timestamp>;
+  completedAt: Timestamp | null;
+};
 export type K8sClusterConfig = {
   id: Generated<number>;
   name: string;
@@ -99,6 +112,7 @@ export type DB = {
   CreditPlans: CreditPlans;
   CreditUsage: CreditUsage;
   Customer: Customer;
+  ImageGenerationTask: ImageGenerationTask;
   K8sClusterConfig: K8sClusterConfig;
   Session: Session;
   User: User;

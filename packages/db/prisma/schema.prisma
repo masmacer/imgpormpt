@@ -69,6 +69,7 @@ model User {
   sessions      Session[]
   userCredits   UserCredits?
   creditUsage   CreditUsage[]
+  imageGenerationTasks ImageGenerationTask[]
 }
 
 model VerificationToken {
@@ -148,4 +149,31 @@ model CreditUsage {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+enum ImageTaskStatus {
+  PENDING
+  GENERATING
+  SUCCESS
+  FAILED
+}
+
+model ImageGenerationTask {
+  id          String          @id @default(dbgenerated("gen_random_uuid()"))
+  userId      String
+  taskId      String          @unique  // KIE AI 返回的 taskId
+  prompt      String          @db.Text
+  size        String
+  status      ImageTaskStatus @default(PENDING)
+  imageUrl    String?         @db.Text
+  errorMessage String?        @db.Text
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @default(now())
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([taskId])
+  @@index([status])
 }

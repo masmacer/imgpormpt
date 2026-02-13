@@ -14,3 +14,11 @@ export const Status = {
   DELETED: "DELETED",
 } as const;
 export type Status = (typeof Status)[keyof typeof Status];
+export const ImageTaskStatus = {
+  PENDING: "PENDING",
+  GENERATING: "GENERATING",
+  SUCCESS: "SUCCESS",
+  FAILED: "FAILED",
+} as const;
+export type ImageTaskStatus =
+  (typeof ImageTaskStatus)[keyof typeof ImageTaskStatus];

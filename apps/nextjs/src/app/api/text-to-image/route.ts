@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@saasfly/auth';
 import { CreditsService } from '~/lib/credits-service';
+import { db } from '@saasfly/db';
 
-// KIE AI API调用
-async function generateImageWithKIE(params: {
+// KIE AI API调用 - 创建生成任务（使用 Webhook）
+async function createImageGenerationTask(params: {
   prompt: string;
   size: string;
-  isEnhance: boolean;
-  filesUrl?: string[];
-}): Promise<any> {
+  callBackUrl: string;
+}): Promise<string> {
   const apiToken = process.env.KIE_API_TOKEN;
   const apiUrl = process.env.KIE_API_URL || 'https://api.kie.ai/api/v1/gpt4o-image/generate';
   
@@ -19,9 +19,9 @@ async function generateImageWithKIE(params: {
   const requestBody = {
     prompt: params.prompt,
     size: params.size,
-    isEnhance: params.isEnhance,
-    filesUrl: params.filesUrl || [],
-    // callBackUrl: 可选，如果需要回调
+    isEnhance: false,
+    filesUrl: [],
+    callBackUrl: params.callBackUrl, // Webhook 回调地址
     uploadCn: false,
     enableFallback: true,
     fallbackModel: "FLUX_MAX"
@@ -52,30 +52,16 @@ async function generateImageWithKIE(params: {
   }
 
   const result = JSON.parse(responseText);
-  return result;
-}
-
-function extractImageFromResult(result: any): { imageUrl: string; taskId: string; status: string } {
-  console.log('Extracting image from result:', result);
-
-  // KIE API 响应格式可能需要根据实际情况调整
-  if (result.data) {
-    return {
-      imageUrl: result.data.imageUrl || result.data.url || '',
-      taskId: result.data.taskId || result.data.id || '',
-      status: result.data.status || 'completed'
-    };
+  
+  // KIE AI 返回格式: { code: 200, msg: "success", data: { taskId: "xxx" } }
+  if (result.code !== 200 || !result.data?.taskId) {
+    throw new Error(`Invalid response format: ${responseText}`);
   }
 
-  if (result.imageUrl) {
-    return {
-      imageUrl: result.imageUrl,
-      taskId: result.taskId || '',
-      status: result.status || 'completed'
-    };
-  }
-
-  throw new Error('无法从API结果中提取图片信息');
+  console.log('=== 任务创建成功 ===');
+  console.log('Task ID:', result.data.taskId);
+  
+  return result.data.taskId;
 }
 
 export async function POST(request: NextRequest) {
@@ -114,16 +100,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { 
       prompt, 
-      size = '1:1', 
-      isEnhance = false,
-      referenceImageUrl = null
+      size = '1:1'
     } = body;
 
     console.log('Request params:', {
       prompt,
-      size,
-      isEnhance,
-      referenceImageUrl
+      size
     });
 
     // 验证必填参数
@@ -149,24 +131,33 @@ export async function POST(request: NextRequest) {
     console.log('KIE_API_TOKEN length:', process.env.KIE_API_TOKEN?.length);
     console.log('========================');
 
-    // 准备 filesUrl 参数
-    const filesUrl = referenceImageUrl ? [referenceImageUrl] : undefined;
-
-    // 调用 KIE AI API 生成图片
-    const apiResult = await generateImageWithKIE({
+    // 步骤1: 调用 KIE AI API 创建生成任务（使用 Webhook）
+    const callBackUrl = 'https://imagepromptgenerator.org/api/kie-webhook';
+    const taskId = await createImageGenerationTask({
       prompt: prompt.trim(),
       size: size,
-      isEnhance: isEnhance,
-      filesUrl: filesUrl
+      callBackUrl: callBackUrl
     });
 
-    const imageData = extractImageFromResult(apiResult);
+    console.log('=== 步骤1完成: 任务已创建 ===');
+    console.log('Task ID:', taskId);
+    console.log('Callback URL:', callBackUrl);
 
-    console.log('=== API Call Completed Successfully ===');
-    console.log('Image URL:', imageData.imageUrl);
-    console.log('Task ID:', imageData.taskId);
+    // 步骤2: 保存任务到数据库
+    await db
+      .insertInto('ImageGenerationTask')
+      .values({
+        userId: user.id,
+        taskId: taskId,
+        prompt: prompt.trim(),
+        size: size,
+        status: 'PENDING',
+      })
+      .execute();
 
-    // 消费积分
+    console.log('=== 步骤2完成: 任务已保存到数据库 ===');
+
+    // 步骤3: 消费积分
     const creditConsumed = await CreditsService.consumeCredits(
       user.id,
       'generate_image',
@@ -181,15 +172,17 @@ export async function POST(request: NextRequest) {
     // 获取更新后的积分信息
     const updatedCredits = await CreditsService.getUserCredits(user.id);
 
+    console.log('=== 任务提交成功，等待 Webhook 回调 ===');
+
+    // 立即返回 taskId，前端轮询状态
     return NextResponse.json({
       success: true,
       data: {
-        imageUrl: imageData.imageUrl,
-        taskId: imageData.taskId,
-        status: imageData.status,
+        taskId: taskId,
+        status: 'PENDING',
         prompt: prompt,
         size: size,
-        isEnhance: isEnhance
+        message: 'Image generation started, please wait...'
       },
       credits: updatedCredits,
       creditsConsumed: creditCost
