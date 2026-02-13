@@ -28,7 +28,7 @@ export function useTextToImage(options?: {
   // 轮询检查任务状态
   const pollTaskStatus = async (taskId: string) => {
     let attempts = 0;
-    const maxAttempts = 60; // 2分钟（每2秒一次）
+    const maxAttempts = 36; // 3分钟（每5秒一次）
     
     return new Promise<TextToImageResult>((resolve, reject) => {
       pollIntervalRef.current = setInterval(async () => {
@@ -67,7 +67,7 @@ export function useTextToImage(options?: {
           clearInterval(pollIntervalRef.current!);
           reject(err);
         }
-      }, 2000); // 每2秒轮询一次
+      }, 5000); // 每5秒轮询一次
     });
   };
 
