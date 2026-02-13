@@ -32,6 +32,8 @@
     "price_features": "생산 환경을 위한 경제적 효율성.",
     "main_nav_features": "특징",
     "main_nav_pricing": "가격",
+    "main_nav_caricature": "캐리커처 프롬프트",
+    "main_nav_text_to_image": "텍스트에서 이미지",
     "main_nav_products": "제품",
     "main_nav_documentation": "문서",
     "main_nav_blog": "블로그",

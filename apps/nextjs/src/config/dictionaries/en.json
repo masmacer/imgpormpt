@@ -32,6 +32,8 @@
     "price_features": "Economically efficient for production environments.",
     "main_nav_features": "Features",
     "main_nav_pricing": "Pricing",
+    "main_nav_caricature": "Caricature Prompt",
+    "main_nav_text_to_image": "Text to Image",
     "main_nav_products": "Products",
     "main_nav_blog": "Blog",
     "main_nav_documentation": "Documentation",

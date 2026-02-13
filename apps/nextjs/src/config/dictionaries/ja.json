@@ -32,6 +32,8 @@
     "price_features": "生産環境に対する経済的効率性。",
     "main_nav_features": "特徴",
     "main_nav_pricing": "価格",
+    "main_nav_caricature": "カリカチュアプロンプト",
+    "main_nav_text_to_image": "テキストから画像",
     "main_nav_products": "製品",
     "main_nav_blog": "ブログ",
     "main_nav_documentation": "ドキュメンテーション",

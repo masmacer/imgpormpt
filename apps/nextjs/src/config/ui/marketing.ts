@@ -13,6 +13,14 @@ export const getMarketingConfig = async ({
   return {
     mainNav: [
       {
+        title: dict.marketing.main_nav_caricature,
+        href: "/caricature-prompt",
+      },
+      {
+        title: dict.marketing.main_nav_text_to_image,
+        href: "/text-to-image",
+      },
+      {
         title: dict.marketing.main_nav_pricing,
         href: "/pricing",
       },

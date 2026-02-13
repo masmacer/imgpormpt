@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@saasfly/ui/button";
 import { Card } from "@saasfly/ui/card";
 import { useImageToPrompt } from "~/hooks/use-image-to-prompt";
@@ -28,6 +29,7 @@ const aiModels = [
 ];
 
 export default function ImageToPromptClient() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("image-to-prompt");
   const [selectedModel, setSelectedModel] = useState("General Image Prompt");
   const [dragActive, setDragActive] = useState(false);
@@ -296,6 +298,12 @@ export default function ImageToPromptClient() {
                   size="sm"
                 >
                   Copy to Clipboard
+                </Button>
+                <Button
+                  onClick={() => router.push(`/text-to-image?prompt=${encodeURIComponent(generatedPrompt)}`)}
+                  size="sm"
+                >
+                  🎨 Generate Image
                 </Button>
               </div>
             </div>

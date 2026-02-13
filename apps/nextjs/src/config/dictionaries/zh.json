@@ -32,6 +32,8 @@
     "price_features": "经济高效为生产环境打造。",
     "main_nav_features": "特色",
     "main_nav_pricing": "价格",
+    "main_nav_caricature": "漫画提示词",
+    "main_nav_text_to_image": "文字转图片",
     "main_nav_products": "产品",
     "main_nav_blog": "博客",
     "main_nav_documentation": "文档",
