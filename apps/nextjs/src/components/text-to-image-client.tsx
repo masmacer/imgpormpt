@@ -126,6 +126,14 @@ export default function TextToImageClient() {
                 </div>
               </div>
 
+              {/* Credit Cost Notice */}
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p className="text-sm text-center">
+                  <span className="font-semibold">💎 Cost: 5 Credits</span>
+                  <span className="text-muted-foreground ml-2">per image generation</span>
+                </p>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <Button

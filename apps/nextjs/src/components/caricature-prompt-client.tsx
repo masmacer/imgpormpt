@@ -236,6 +236,14 @@ export default function CaricaturePromptClient() {
               </div>
             </div>
 
+            {/* Credit Cost Notice */}
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+              <p className="text-sm text-center">
+                <span className="font-semibold">💎 Cost: 1 Credit</span>
+                <span className="text-muted-foreground ml-2">per prompt generation</span>
+              </p>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex justify-center gap-4">
               <Button
