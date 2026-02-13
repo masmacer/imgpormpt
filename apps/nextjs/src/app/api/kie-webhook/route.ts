@@ -14,12 +14,24 @@ export async function POST(request: NextRequest) {
     console.log('=== 完整 Webhook 数据 ===');
     console.log(JSON.stringify(body, null, 2));
 
-    // KIE AI 实际发送的数据格式可能是嵌套的
-    // 尝试多种可能的路径获取 taskId
+    // KIE AI 实际发送的数据格式（基于实际回调）：
+    // { code: 200, data: { taskId: "xxx", info: { result_urls: [...] } }, msg: "..." }
     let taskId = body.taskId || body.data?.taskId || body.task_id;
-    let status = body.status || body.data?.status;
     let resultUrls = body.response?.resultUrls || body.data?.info?.result_urls || body.result_urls;
-    let errorMessage = body.errorMessage || body.error_message || body.data?.errorMessage;
+    let errorMessage = body.errorMessage || body.error_message || body.data?.errorMessage || body.msg;
+    
+    // KIE 没有 status 字段，用 code 判断成功/失败
+    let status;
+    if (body.code === 200) {
+      status = 'SUCCESS';
+    } else if (body.code >= 400) {
+      status = 'FAILED';
+    } else if (body.status === 'GENERATING') {
+      status = 'GENERATING';
+    } else {
+      // 兜底：有 code 200 就是成功
+      status = body.code === 200 ? 'SUCCESS' : (body.status || 'UNKNOWN');
+    }
 
     console.log('=== 解析结果 ===');
     console.log('taskId:', taskId);
@@ -39,11 +51,27 @@ export async function POST(request: NextRequest) {
     console.log(`任务 ${taskId} 状态: ${status}`);
 
     // 查找对应的任务记录
-    const task = await db
-      .selectFrom('ImageGenerationTask')
-      .where('taskId', '=', taskId)
-      .selectAll()
-      .executeTakeFirst();
+    let task;
+    try {
+      console.log('查询条件 - taskId:', taskId);
+      task = await db
+        .selectFrom('ImageGenerationTask')
+        .where('taskId', '=', taskId)
+        .selectAll()
+        .executeTakeFirst();
+      
+      console.log('查询结果:', task ? '找到任务' : '未找到任务');
+      if (task) {
+        console.log('任务详情:', { id: task.id, status: task.status, userId: task.userId });
+      }
+    } catch (error) {
+      console.error('❌ 数据库查询失败，表可能不存在:', error);
+      console.error('请在 Supabase 执行 create-image-task-table.sql');
+      return NextResponse.json({ 
+        received: true, 
+        error: 'Database table not found. Please create ImageGenerationTask table first.' 
+      });
+    }
 
     if (!task) {
       console.warn(`任务 ${taskId} 不存在于数据库中`);
@@ -85,15 +113,22 @@ export async function POST(request: NextRequest) {
       console.log('⚠️ 未知状态:', status);
     }
 
-    await db
-      .updateTable('ImageGenerationTask')
-      .set(updateData)
-      .where('taskId', '=', taskId)
-      .execute();
+    try {
+      const result = await db
+        .updateTable('ImageGenerationTask')
+        .set(updateData)
+        .where('taskId', '=', taskId)
+        .execute();
 
-    console.log(`=== 任务 ${taskId} 已更新 ===`);
-    console.log('更新后的状态:', updateData);
-    console.log('=== Webhook 处理完成 ===\n');
+      console.log('=== 数据库更新执行完成 ===');
+      console.log('更新结果:', result);
+      console.log(`=== 任务 ${taskId} 已更新 ===`);
+      console.log('更新后的状态:', updateData);
+      console.log('=== Webhook 处理完成 ===\n');
+    } catch (error) {
+      console.error('❌ 数据库更新失败:', error);
+      throw error;
+    }
 
     return NextResponse.json({ received: true });
 
